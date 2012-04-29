@@ -14,20 +14,6 @@ public class Chunk {
 	Tag[] sections = new Tag[16];
 	
 	public Chunk(InputStream is) throws IOException {
-		/*int length = 0;
-		for (int i = 0; i < 4; i++) {
-			length <<= 8;
-			length |= is.read();
-		}
-		int compression = is.read();
-		switch (compression) {
-			case 2: // zlib
-				is = new InflaterInputStream(is);
-				break;
-			default:
-				throw new RuntimeException("Unsupported compression mode: " + compression);
-		}
-		*/
 		t = Tag.readFrom(is);
 		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
 		for (Tag section : sArray) {
@@ -41,28 +27,8 @@ public class Chunk {
 		for (int y = 0; y < 16; y++) {
 			if (sections[y] != null) {
 				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("BlockLight").getValue(), 0, 2048);
-				//System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("SkyLight").getValue(), 0, 2048);
-				//System.exit(0);
-				//sections[y].findTagByName("SkyLight").setValue(new byte[2048]);
 			}
 		}
-	}
-	
-	public byte[] write() throws IOException {
-		ByteArrayOutputStream dos = new ByteArrayOutputStream();
-		DeflaterOutputStream deos = new DeflaterOutputStream(dos);
-		t.writeTo(deos);
-		deos.flush();
-		deos.close();
-		byte[] rawData = dos.toByteArray();
-		byte[] data = new byte[5 + rawData.length];
-		dos.reset();
-		DataOutputStream daos = new DataOutputStream(dos);
-		daos.writeInt(rawData.length);
-		daos.writeByte(2);
-		System.arraycopy(dos.toByteArray(), 0, data, 0, 5);
-		System.arraycopy(rawData, 0, data, 5, rawData.length);
-		return data;
 	}
 	
 	public int getBlockType(int x, int y, int z) {
