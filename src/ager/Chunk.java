@@ -32,13 +32,20 @@ public class Chunk {
 	}
 	
 	public int getBlockType(int x, int y, int z) {
+		if (y < 0 || y > 255) { return -1; }
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
-		return ((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)];
+		try {
+			return ((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)];
+		} catch (ArrayIndexOutOfBoundsException e) {
+			System.out.println(x + "/" + y + "/" + z);
+			throw new RuntimeException(e);
+		}
 	}
 	
 	public void setBlockType(byte type, int x, int y, int z) {
+		if (y < 0 || y > 255) { return; }
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
@@ -60,6 +67,7 @@ public class Chunk {
 	}
 	
 	public int getSkyLight(int x, int y, int z) {
+		if (y < 0 || y > 255) { return -1; }
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
@@ -69,6 +77,7 @@ public class Chunk {
 	}
 	
 	public void setSkyLight(byte light, int x, int y, int z) {
+		if (y < 0 || y > 255) { return; }
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
