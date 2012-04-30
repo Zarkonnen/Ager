@@ -273,4 +273,19 @@ public class Rule {
 	}
 	
 	public static Outcome fall() { return new Fall(); }
+	
+	public static void fall(int x, int y, int z, MCMap map, int becomes) {
+		// how deep can we go?
+		int fallY = y;
+		while (map.getBlockType(x, --fallY, z) == Types.Air) {}
+		fallY++;
+		if (fallY < y) {
+			if (becomes != Types.Air) { map.setBlockType((byte) becomes, x, fallY, z); }
+			map.setBlockType((byte) Types.Air, x, y, z);
+			map.healBlockLight(x, y, z);
+			if (becomes == Types.Air) {
+				map.setSkyLight((byte) map.getSkyLight(x, y, z), x, fallY - 1, z);
+			}
+		}
+	}
 }

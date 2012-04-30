@@ -50,6 +50,14 @@ public class MCAFile {
 		if (rf != null) { rf.close(); }
 	}
 	
+	public void calcSupport(boolean postRun) {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].calcSupport(postRun);
+			}
+		}}
+	}
+	
 	public int getBlockType(int x, int y, int z) {
 		int chunkX = x / 16;
 		int chunkZ = z / 16;

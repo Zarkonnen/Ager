@@ -14,10 +14,32 @@ public class Rules {
 	
 	public static boolean[] ruleTypes = new boolean[1024];
 	public static final ArrayList<Rule>[] rulesForType = new ArrayList[1024];
+	public static int[] fallChanges = new int[1024];
+	
+	static void survivesFallAs(int type, int as) {
+		fallChanges[type] = as;
+	}
 	
 	static {
+		survivesFallAs(Sand, Sand);
+		survivesFallAs(Gravel, Gravel);
+		survivesFallAs(Cobblestone, Gravel);
+		survivesFallAs(Stone_Brick, Gravel);
+		survivesFallAs(Sandstone, Sand);
+		survivesFallAs(Brick, Gravel);
+		survivesFallAs(Cauldron, Cauldron);
+		survivesFallAs(Dirt, Dirt);
+		survivesFallAs(Stone, Gravel);
+		survivesFallAs(Enchantment_Table, Obsidian);
+		survivesFallAs(Obsidian, Obsidian);
+		survivesFallAs(Iron_Bars, Iron_Bars);
+		survivesFallAs(Nether_Brick, Nether_Brick);
+		survivesFallAs(Soul_Sand, Soul_Sand);
+		survivesFallAs(Diamond_Block, Diamond_Block);
+		survivesFallAs(Iron_Block, Iron_Block);
+		survivesFallAs(Gold_Block, Gold_Block);
 		// Falling
-		rule().desc("Falling sand.").
+		/*rule().desc("Falling sand.").
 				p(1).when(is(Sand)).when(above(Air)).then(fall());
 		rule().desc("Falling gravel.").
 				p(1).when(is(Gravel)).when(above(Air)).then(fall());
@@ -32,7 +54,7 @@ public class Rules {
 		rule().desc("Falling sandstone.").
 				p(0.5).when(is(Sandstone)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Sand)).then(fall());
 		rule().desc("Falling bricks.").
-				p(0.5).when(is(Brick)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Gravel)).then(fall());
+				p(0.5).when(is(Brick)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Gravel)).then(fall());*/
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.1).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
@@ -56,6 +78,8 @@ public class Rules {
 				p(0.00).when(is(Sand)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));*/
 		rule().desc("Stone blocks vanishing.").
 				p(0.01).when(is(Stone_Brick)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
+		rule().desc("Wooden planks vanishing.").
+				p(0.1).when(is(Wooden_Plank)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
 		rule().desc("Crafting table vanishing.").
 				p(0.1).when(is(Crafting_Table)).then(become(Air));
 		rule().desc("Crafting table vanishing.").

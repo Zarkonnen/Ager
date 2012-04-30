@@ -69,6 +69,20 @@ public class MCMap {
 		setBlockLight((byte) max, x, y, z);
 	}
 	
+	public void calcSupport(boolean postRun) {
+		for (MCAFile f : files.values()) {
+			f.calcSupport(postRun);
+		}
+	}
+	
+	public boolean isSupported(int x, int y, int z) {
+		return false;
+	}
+	
+	public boolean wasSupported(int x, int y, int z) {
+		return false;
+	}
+	
 	public int getSkyLight(int x, int y, int z) {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return -1; }

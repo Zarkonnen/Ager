@@ -1,17 +1,80 @@
 package ager;
 
-import com.jcraft.jzlib.DeflaterOutputStream;
-import com.jcraft.jzlib.InflaterInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.BitSet;
+import java.util.LinkedList;
 import unknown.Tag;
 
 public class Chunk {
 	public Tag t;
 	Tag[] sections = new Tag[16];
+	
+	BitSet wasSupported = new BitSet(256 * 16 * 16); // yzx
+	BitSet isSupported = new BitSet(256 * 16 * 16); // yzx
+	
+	static final class Pt3 {
+		final int x, y, z;
+
+		public Pt3(int x, int y, int z) {
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
+		
+		@Override
+		public boolean equals(Object o2) {
+			if (!(o2 instanceof Pt3)) { return false; }
+			Pt3 p2 = (Pt3) o2;
+			return x == p2.x && y == p2.y && z == p2.z;
+		}
+		
+		@Override
+		public int hashCode() {
+			return x + 16 * z + 256 * y;
+		}
+	}
+	
+	public void calcSupport(boolean postRun) {
+		isSupported.clear();
+		final BitSet supported = postRun ? isSupported : wasSupported;
+		
+		final LinkedList<Pt3> q = new LinkedList<Pt3>();
+		// Start out by going from the bottom and marking everything as supported until we hit air.
+		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+			int y = 0;
+			int type = getBlockType(x, y, z);
+			while (type != Types.Air) {
+				supported.set(y * 256 + z * 16 + x);
+				q.add(new Pt3(x, y, z));
+				if (y == 255) { break; }
+				y++;
+				type = getBlockType(x, y, z);
+			}
+		}}
+		
+		while (!q.isEmpty()) {
+			Pt3 p = q.pop();
+			for (int dy = -1; dy < 2; dy++) {
+				int ny = p.y + dy;
+				if (ny < 0 || ny >= 256) { continue; }
+				for (int dx = -1; dx < 2; dx++) {
+					int nx = p.x + dx;
+					if (nx < 0 || nx >= 16) { continue; }
+					for (int dz = -1; dz < 2; dz++) {
+						if (dy != 0 && dx != 0 && dz != 0) { continue; }
+						if (dy == 0 && dx == 0 && dz == 0) { continue; }
+						int nz = p.z + dz;
+						if (nz < 0 || nz >= 16) { continue; }
+						if (!supported.get(ny * 256 + nz * 16 + nx) && getBlockType(nx, ny, nz) > Types.Air) {
+							supported.set(ny * 256 + nz * 16 + nx);
+							q.add(new Pt3(nx, ny, nz));
+						}
+					}
+				}
+			}
+		}
+	}
 	
 	public Chunk(InputStream is) throws IOException {
 		t = Tag.readFrom(is);

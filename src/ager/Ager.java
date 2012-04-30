@@ -12,8 +12,13 @@ public class Ager {
 		Random r = new Random();
 		
 		MCMap m = new MCMap(new File(args[0]));
+		m.calcSupport(false);
+		
 		int loops = args.length > 1 ? Integer.parseInt(args[1]) : 2;
 		for (int lp = 0; lp < loops; lp++) {
+			if (lp % 2 == 1) {
+				m.calcSupport(true);
+			}
 			int fi = 0;
 			Rule.ApplicationCache ac = new Rule.ApplicationCache();
 			for (MCAFile f : m.files.values()) {
@@ -29,9 +34,18 @@ public class Ager {
 								int z = f.zOffset * 512 + zBlock * 16 + lz;
 								ac.type = sectionData[((ly * 16 + lz) * 16 + lx)];
 								ac.typeKnown = true;
-								if (!Rules.ruleTypes[ac.type + 1]) { continue; }
-								for (Rule rule : Rules.rulesForType[ac.type + 1]) {
-									if (rule.apply(x, y, z, m, r, ac)) { break; }
+								if (lp % 2 == 0) {
+									if (!Rules.ruleTypes[ac.type + 1]) { continue; }
+									for (Rule rule : Rules.rulesForType[ac.type + 1]) {
+										if (rule.apply(x, y, z, m, r, ac)) { break; }
+									}
+								} else {
+									if (ac.type > Types.Air &&
+										!f.chunks[zBlock][xBlock].isSupported.get(ly * 256 + lz * 16 + lx) &&
+										f.chunks[zBlock][xBlock].wasSupported.get(ly * 256 + lz * 16 + lx))
+									{
+										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
+									}
 								}
 							}}}
 						} 
@@ -40,7 +54,7 @@ public class Ager {
 				System.out.println(++fi + "/" + m.files.values().size());
 			}	
 		}
-		
+				
 		m.writeAndClose();
 		
 		/*for (int fz = -1; fz < 1; fz++) { for (int fx = -1; fx < 1; fx++) {
