@@ -85,4 +85,24 @@ public class Chunk {
 		byte b = ((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2];
 		((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
 	}
+	
+	public int getBlockLight(int x, int y, int z) {
+		if (y < 0 || y > 255) { return -1; }
+		int section = y / 16;
+		int remY = y % 16;
+		if (sections[section] == null) { return -1; }
+		int addr = ((remY * 16 + z) * 16 + x);
+		byte b = ((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2];
+		return getNybble(b, addr % 2);
+	}
+	
+	public void setBlockLight(byte light, int x, int y, int z) {
+		if (y < 0 || y > 255) { return; }
+		int section = y / 16;
+		int remY = y % 16;
+		if (sections[section] == null) { return; }
+		int addr = ((remY * 16 + z) * 16 + x);
+		byte b = ((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2];
+		((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
+	}
 }

@@ -246,8 +246,9 @@ public class Rule {
 		public void perform(int x, int y, int z, MCMap map) {
 			map.setBlockType((byte) type, x, y, z);
 			if (type == Types.Air) {
-				map.setSkyLight((byte) map.getSkyLight(x, y, z), x, y - 1, z);
+				//map.setSkyLight((byte) map.getSkyLight(x, y, z), x, y - 1, z);
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
+				map.healBlockLight(x, y, z);
 			}
 		}
 	}
@@ -264,6 +265,7 @@ public class Rule {
 			if (fallY < y) {
 				map.setBlockType((byte) map.getBlockType(x, y, z), x, fallY, z);
 				map.setBlockType((byte) Types.Air, x, y, z);
+				map.healBlockLight(x, y, z);
 			}
 			/*map.setSkyLight((byte) map.getSkyLight(x, y, z), x, y - 1, z);
 			map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);*/ // ?

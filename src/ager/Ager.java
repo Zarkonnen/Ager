@@ -30,7 +30,7 @@ public class Ager {
 								ac.type = sectionData[((ly * 16 + lz) * 16 + lx)];
 								ac.typeKnown = true;
 								if (!Rules.ruleTypes[ac.type + 1]) { continue; }
-								for (Rule rule : Rules.rules) {
+								for (Rule rule : Rules.rulesForType[ac.type + 1]) {
 									if (rule.apply(x, y, z, m, r, ac)) { break; }
 								}
 							}}}

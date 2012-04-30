@@ -13,6 +13,7 @@ public class Rules {
 	}
 	
 	public static boolean[] ruleTypes = new boolean[1024];
+	public static final ArrayList<Rule>[] rulesForType = new ArrayList[1024];
 	
 	static {
 		// Falling
@@ -171,11 +172,17 @@ public class Rules {
 				p(0.1).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		
 		for (Rule r : rules) {
+			int type = -1;
 			for (Condition cond : r.conditions) {
 				if (cond.check() instanceof Is) {
 					ruleTypes[((Is) cond.check()).type + 1] = true;
+					type = ((Is) cond.check()).type;
 				}
 			}
+			if (rulesForType[type + 1] == null) {
+				rulesForType[type + 1] = new ArrayList<Rule>();
+			}
+			rulesForType[type + 1].add(r);
 		}
 	}
 }

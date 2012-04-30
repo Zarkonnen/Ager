@@ -59,6 +59,16 @@ public class MCMap {
 		files.get(fp).setBlockType(type, rem(x), y, rem(z));
 	}
 	
+	public void healBlockLight(int x, int y, int z) {
+		int max = 0;
+		for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) { for (int dy = -1; dy < 2; dy++) {
+			if (dz != 0 && dz != 0 && dy != 0) { continue; }
+			if (dz == 0 && dx == 0 && dy == 0) { continue; }
+			max = Math.max(getBlockLight(x + dx, y + dy, z + dz), max);
+		}}}
+		setBlockLight((byte) max, x, y, z);
+	}
+	
 	public int getSkyLight(int x, int y, int z) {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return -1; }
@@ -69,5 +79,17 @@ public class MCMap {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return; }
 		files.get(fp).setSkyLight(light, rem(x), y, rem(z));
+	}
+	
+	public int getBlockLight(int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return -1; }
+		return files.get(fp).getBlockLight(rem(x), y, rem(z));
+	}
+	
+	public void setBlockLight(byte light, int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return; }
+		files.get(fp).setBlockLight(light, rem(x), y, rem(z));
 	}
 }
