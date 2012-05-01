@@ -246,7 +246,6 @@ public class Rule {
 		public void perform(int x, int y, int z, MCMap map) {
 			map.setBlockType((byte) type, x, y, z);
 			if (type == Types.Air) {
-				//map.setSkyLight((byte) map.getSkyLight(x, y, z), x, y - 1, z);
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
 				map.healBlockLight(x, y, z);
 			}
@@ -258,17 +257,7 @@ public class Rule {
 	public static class Fall implements Outcome {
 		@Override
 		public void perform(int x, int y, int z, MCMap map) {
-			// how deep can we go?
-			int fallY = y;
-			while (map.getBlockType(x, --fallY, z) == Types.Air) {}
-			fallY++;
-			if (fallY < y) {
-				map.setBlockType((byte) map.getBlockType(x, y, z), x, fallY, z);
-				map.setBlockType((byte) Types.Air, x, y, z);
-				map.healBlockLight(x, y, z);
-			}
-			/*map.setSkyLight((byte) map.getSkyLight(x, y, z), x, y - 1, z);
-			map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);*/ // ?
+			fall(x, y, z, map, map.getBlockType(x, y, z));
 		}
 	}
 	
@@ -284,7 +273,9 @@ public class Rule {
 			map.setBlockType((byte) Types.Air, x, y, z);
 			map.healBlockLight(x, y, z);
 			if (becomes == Types.Air) {
-				map.setSkyLight((byte) map.getSkyLight(x, y, z), x, fallY - 1, z);
+				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, fallY, z);
+			} else {
+				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, fallY + 1, z);
 			}
 		}
 	}

@@ -38,32 +38,15 @@ public class Rules {
 		survivesFallAs(Diamond_Block, Diamond_Block);
 		survivesFallAs(Iron_Block, Iron_Block);
 		survivesFallAs(Gold_Block, Gold_Block);
-		// Falling
-		/*rule().desc("Falling sand.").
-				p(1).when(is(Sand)).when(above(Air)).then(fall());
-		rule().desc("Falling gravel.").
-				p(1).when(is(Gravel)).when(above(Air)).then(fall());
-		rule().desc("Falling glass.").
-				p(1).when(is(Glass)).when(above(Air)).then(become(Air));
-		rule().desc("Falling glass.").
-				p(1).when(is(Glass_Pane)).when(above(Air)).then(become(Air));
-		rule().desc("Falling cobble.").
-				p(0.5).when(is(Cobblestone)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Gravel)).then(fall());
-		rule().desc("Falling stone.").
-				p(0.5).when(is(Stone_Brick)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Gravel)).then(fall());
-		rule().desc("Falling sandstone.").
-				p(0.5).when(is(Sandstone)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Sand)).then(fall());
-		rule().desc("Falling bricks.").
-				p(0.5).when(is(Brick)).when(above(Air)).when(nextToAtLeast(4, Air)).then(become(Gravel)).then(fall());*/
 		
 		rule().desc("Exposed cobble turns to gravel.").
-				p(0.1).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
+				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0.05).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.01, 3, Water)).moreLikelyWhen(touching(0.2, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.15, 2, Water)).moreLikelyWhen(touching(0.05, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
-				p(0.001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").
-				p(0.01).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.001, Air)).then(become(Air));
+				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Grass growth.").
 				p(1).when(is(Dirt)).when(skyExposed()).when(nextTo(Grass)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
@@ -73,11 +56,11 @@ public class Rules {
 		rule().desc("Sand becoming sandstone.").
 				p(0.4).when(is(Sand)).when(below(Sandstone)).then(become(Sandstone));
 		rule().desc("Sandstone vanishing.").
-				p(0).when(is(Sandstone)).moreLikelyWhen(skyExposed(0.2)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.001, Air)).then(become(Air));
+				p(0).when(is(Sandstone)).moreLikelyWhen(skyExposed(0.2)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
 		/*rule().desc("Sand vanishing.").
 				p(0.00).when(is(Sand)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));*/
 		rule().desc("Stone blocks vanishing.").
-				p(0.01).when(is(Stone_Brick)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
+				p(0.00001).when(is(Stone_Brick)).moreLikelyWhen(skyExposed(0.03)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Wooden planks vanishing.").
 				p(0.1).when(is(Wooden_Plank)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
 		rule().desc("Crafting table vanishing.").
@@ -123,7 +106,7 @@ public class Rules {
 		rule().desc("Redstone vanishing.").
 				p(0.3).when(is(Redstone_Wire)).then(become(Air));
 		rule().desc("Clay bricks vanishing.").
-				p(0.012).when(is(Clay_Brick)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
+				p(0.00001).when(is(Clay_Brick)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Farmland vanishing.").
 				p(0.6).when(is(Farmland)).when(below(Air)).then(become(Dirt));
 		rule().desc("Glass vanishing.").
@@ -163,14 +146,14 @@ public class Rules {
 		
 		// Can't distinguish between slab types yet.
 		rule().desc("Slabs weathering.").
-				p(0.01).when(is(Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.00001).when(is(Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.01).when(is(Double_Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.00001).when(is(Double_Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		
-		rule().desc("Slabs weathering.").
-				p(0.2).when(is(Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		/*rule().desc("Slabs weathering.").
+				p(0.2).when(is(Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.2).when(is(Double_Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.2).when(is(Double_Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		
 		rule().desc("Slabs weathering.").
 				p(0).when(is(Sandstone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
@@ -184,16 +167,16 @@ public class Rules {
 				p(0.01).when(is(Double_Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
 				p(0.01).when(is(Double_Stone_Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
-		
+		*/
 		
 		rule().desc("Stone stairs weathering.").
-				p(0.2).when(is(Cobblestone_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.1).when(is(Cobblestone_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		rule().desc("Wooden stairs weathering.").
 				p(0.4).when(is(Wooden_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
-		rule().desc("Wooden stairs weathering.").
+		rule().desc("Brick stairs weathering.").
 				p(0.05).when(is(Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		rule().desc("Stone brick stairs weathering.").
-				p(0.1).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.01).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		
 		for (Rule r : rules) {
 			int type = -1;
