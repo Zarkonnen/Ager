@@ -144,30 +144,54 @@ public class Rules {
 		rule().desc("Torch vanishing.").
 				p(0.65).when(is(Torch)).then(become(Air));
 		
-		// Can't distinguish between slab types yet.
 		rule().desc("Slabs weathering.").
-				p(0.00001).when(is(Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Stone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		rule().desc("Inverted slabs weathering.").
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Stone_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.00001).when(is(Double_Stone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.00001).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Stone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		
-		/*rule().desc("Slabs weathering.").
+		rule().desc("Slabs weathering.").
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Cobble)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		rule().desc("Inverted slabs weathering.").
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Cobble_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		rule().desc("Double slabs weathering.").
+				p(0.00001).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Cobble)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		
+		rule().desc("Slabs weathering.").
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Stone_Brick)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		rule().desc("Inverted slabs weathering.").
+				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Stone_Brick_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		rule().desc("Double slabs weathering.").
+				p(0.00001).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Stone_Brick)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		
+		
+		rule().desc("Slabs weathering.").
 				p(0.2).when(is(Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.2).when(is(Double_Wooden_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.2).when(is(Wooden_Double_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		
 		rule().desc("Slabs weathering.").
-				p(0).when(is(Sandstone_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
-		
+				p(0.2).when(is(Stone_Slab)).when(hasData(Stone_Slab_Wood)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Slabs weathering.").
-				p(0.01).when(is(Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.2).when(is(Stone_Slab)).when(hasData(Stone_Slab_Wood_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.01).when(is(Double_Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0.1).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Wood)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+		
 		
 		rule().desc("Slabs weathering.").
-				p(0.01).when(is(Double_Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+				p(0).when(is(Stone_Slab)).when(hasData(Stone_Slab_Sandstone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		rule().desc("Slabs weathering.").
+				p(0).when(is(Stone_Slab)).when(hasData(Stone_Slab_Sandstone_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		rule().desc("Slabs weathering.").
+				p(0).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Sandstone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		
+		rule().desc("Slabs weathering.").
+				p(0.01).when(is(Stone_Slab)).when(hasData(Stone_Slab_Clay_Brick)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		rule().desc("Slabs weathering.").
+				p(0.01).when(is(Stone_Slab)).when(hasData(Stone_Slab_Clay_Brick_Inverted)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		rule().desc("Double slabs weathering.").
-				p(0.01).when(is(Double_Stone_Brick_Slab)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
-		*/
+				p(0.01).when(is(Double_Stone_Slab)).when(hasData(Double_Stone_Slab_Clay_Brick)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		
 		rule().desc("Stone stairs weathering.").
 				p(0.1).when(is(Cobblestone_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));

@@ -117,6 +117,21 @@ public class Rule {
 	
 	public static Condition is(int type) { return new MinimumCondition(new Is(type), 1); }
 	
+	public static class HasData implements Check {
+		final int data;
+
+		public HasData(int data) {
+			this.data = data;
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			return map.getData(x, y, z) == data ? 1 : 0;
+		}
+	}
+	
+	public static Condition hasData(int data) { return new MinimumCondition(new HasData(data), 1); }
+		
 	public static class SkyExposed implements Check {
 		@Override
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {

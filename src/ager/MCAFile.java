@@ -72,6 +72,20 @@ public class MCAFile {
 		chunks[chunkZ][chunkX].setBlockType(type, x % 16, y, z % 16);
 	}
 	
+	public int getData(int x, int y, int z) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return -1; }
+		return chunks[chunkZ][chunkX].getData(x % 16, y, z % 16);
+	}
+	
+	public void setData(byte data, int x, int y, int z) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return; }
+		chunks[chunkZ][chunkX].setData(data, x % 16, y, z % 16);
+	}
+	
 	public int getSkyLight(int x, int y, int z) {
 		int chunkX = x / 16;
 		int chunkZ = z / 16;

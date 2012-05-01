@@ -129,6 +129,26 @@ public class Chunk {
 		return (byte) result;
 	}
 	
+	public int getData(int x, int y, int z) {
+		if (y < 0 || y > 255) { return -1; }
+		int section = y / 16;
+		int remY = y % 16;
+		if (sections[section] == null) { return -1; }
+		int addr = ((remY * 16 + z) * 16 + x);
+		byte b = ((byte[]) sections[section].findTagByName("Data").getValue())[addr / 2];
+		return getNybble(b, addr % 2);
+	}
+	
+	public void setData(byte data, int x, int y, int z) {
+		if (y < 0 || y > 255) { return; }
+		int section = y / 16;
+		int remY = y % 16;
+		if (sections[section] == null) { return; }
+		int addr = ((remY * 16 + z) * 16 + x);
+		byte b = ((byte[]) sections[section].findTagByName("Data").getValue())[addr / 2];
+		((byte[]) sections[section].findTagByName("Data").getValue())[addr / 2] = setNybble(b, addr % 2, data);
+	}
+	
 	public int getSkyLight(int x, int y, int z) {
 		if (y < 0 || y > 255) { return -1; }
 		int section = y / 16;

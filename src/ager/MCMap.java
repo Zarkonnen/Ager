@@ -85,12 +85,16 @@ public class MCMap {
 		}
 	}
 	
-	public boolean isSupported(int x, int y, int z) {
-		return false;
+	public int getData(int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return -1; }
+		return files.get(fp).getData(rem(x), y, rem(z));
 	}
 	
-	public boolean wasSupported(int x, int y, int z) {
-		return false;
+	public void setData(byte data, int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return; }
+		files.get(fp).setData(data, rem(x), y, rem(z));
 	}
 	
 	public int getSkyLight(int x, int y, int z) {
