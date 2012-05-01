@@ -62,11 +62,21 @@ public class MCMap {
 	public void healBlockLight(int x, int y, int z) {
 		int max = 0;
 		for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) { for (int dy = -1; dy < 2; dy++) {
-			//if (dz != 0 && dz != 0 && dy != 0) { continue; }
+			if (dz != 0 && dz != 0 && dy != 0) { continue; }
 			//if (dz == 0 && dx == 0 && dy == 0) { continue; }
 			max = Math.max(getBlockLight(x + dx, y + dy, z + dz), max);
 		}}}
 		setBlockLight((byte) max, x, y, z);
+	}
+	
+	public void healSkyLight(int x, int y, int z) {
+		int max = 0;
+		for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) { for (int dy = -1; dy < 2; dy++) {
+			if (dz != 0 && dz != 0 && dy != 0) { continue; }
+			//if (dz == 0 && dx == 0 && dy == 0) { continue; }
+			max = Math.max(getSkyLight(x + dx, y + dy, z + dz), max);
+		}}}
+		setSkyLight((byte) max, x, y, z);
 	}
 	
 	public void calcSupport(boolean postRun) {

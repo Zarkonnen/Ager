@@ -42,7 +42,7 @@ public class Rules {
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.15, 2, Water)).moreLikelyWhen(touching(0.05, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.25, 3, Water)).moreLikelyWhen(touching(0.15, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
 				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").

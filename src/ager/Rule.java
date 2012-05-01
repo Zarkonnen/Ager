@@ -248,6 +248,7 @@ public class Rule {
 			if (type == Types.Air) {
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
 				map.healBlockLight(x, y, z);
+				map.healSkyLight(x, y, z); // ?
 			}
 		}
 	}
