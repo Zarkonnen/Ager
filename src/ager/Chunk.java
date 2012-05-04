@@ -8,6 +8,7 @@ import unknown.Tag;
 public class Chunk {
 	public Tag t;
 	Tag[] sections = new Tag[16];
+	byte[][] sectionBlocks = new byte[16][0];
 	public int globalChunkX, globalChunkZ;
 	Chunk[][] chunkCtx = new Chunk[3][3];
 	
@@ -40,7 +41,6 @@ public class Chunk {
 			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
 				if (supported.get(y * 256 + z * 16 + x)) {
 					q.push(x, y, z);
-					//q.add(new Pt3(x, y, z));
 				}
 			}}}
 			firstPass = false;
@@ -69,13 +69,13 @@ public class Chunk {
 							if (targetChunk == null) { continue; }
 							int xInOtherChunk = (nx + 16) % 16;
 							int zInOtherChunk = (nx + 16) % 16;
-							if (!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk) && getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air)
+							if (getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air && !(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk))
 							{
 								(postRun ? targetChunk.isSupported : targetChunk.wasSupported).set(ny * 256 + zInOtherChunk * 16 + xInOtherChunk);
 								targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
 							}
 						} else {
-							if (!supported.get(ny * 256 + nz * 16 + nx) && getBlockType(nx, ny, nz) > Types.Air) {
+							if (getBlockType(nx, ny, nz) > Types.Air && !supported.get(ny * 256 + nz * 16 + nx)) {
 								supported.set(ny * 256 + nz * 16 + nx);
 								q.push(nx, ny, nz);
 							}
@@ -93,6 +93,7 @@ public class Chunk {
 		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
 		for (Tag section : sArray) {
 			this.sections[(Byte) section.findTagByName("Y").getValue()] = section;
+			this.sectionBlocks[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("Blocks").getValue();
 		}
 		this.globalChunkX = globalChunkX;
 		this.globalChunkZ = globalChunkZ;
@@ -124,7 +125,8 @@ public class Chunk {
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
 		try {
-			return ((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)];
+			//return ((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)];
+			return sectionBlocks[section][((remY * 16 + z) * 16 + x)];
 		} catch (ArrayIndexOutOfBoundsException e) {
 			System.out.println(x + "/" + y + "/" + z);
 			throw new RuntimeException(e);
@@ -136,7 +138,8 @@ public class Chunk {
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
-		((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)] = type;
+		//((byte[]) sections[section].findTagByName("Blocks").getValue())[((remY * 16 + z) * 16 + x)] = type;
+		sectionBlocks[section][((remY * 16 + z) * 16 + x)] = type;
 	}
 	
 	public static int getNybble(byte b, int offset) {

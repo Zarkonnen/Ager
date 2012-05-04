@@ -66,24 +66,5 @@ public class Ager {
 		}
 				
 		m.writeAndClose();
-		
-		/*for (int fz = -1; fz < 1; fz++) { for (int fx = -1; fx < 1; fx++) {
-			MCAFile f = new MCAFile(new File("/Users/zar/Desktop/Creative/region/"), fz, fx);
-			for (int y = 0; y < 255; y++) {
-				for (int z = 0; z < 512; z++) {
-					for (int x = 0; x < 512; x++) {
-						if (f.getBlockType(x, y, z) == 4 && f.getBlockType(x, y + 1, z) == 0 && r.nextBoolean()) {
-							f.setBlockType((byte) 0, x, y, z);
-							f.setSkyLight((byte) f.getSkyLight(x, y, z), x, y - 1, z);
-							f.setSkyLight((byte) f.getSkyLight(x, y + 1, z), x, y, z);
-						}
-					}
-				}
-			}
-			
-			f.removeLighting();
-			
-			f.writeAndClose();
-		}}*/
 	}
 }
