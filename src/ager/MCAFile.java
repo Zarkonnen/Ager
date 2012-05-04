@@ -23,11 +23,15 @@ public class MCAFile {
 			for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 				InputStream is = rf.getChunkDataInputStream(x, z);
 				if (is != null) {
-					chunks[z][x] = new Chunk(is);
+					chunks[z][x] = new Chunk(is, x + xOffset * 32, z + zOffset * 32);
 					is.close();
 				}
 			}}
 		}
+	}
+	
+	public Chunk getChunk(int x, int z) {
+		return chunks[z][x];
 	}
 	
 	public void removeLighting() {
@@ -50,12 +54,28 @@ public class MCAFile {
 		if (rf != null) { rf.close(); }
 	}
 	
-	public void calcSupport(boolean postRun) {
+	public void initSupport(boolean postRun) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
-				chunks[z][x].calcSupport(postRun);
+				chunks[z][x].initSupport(postRun);
 			}
 		}}
+	}
+	
+	public boolean finishSupport(boolean postRun) {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].floodFill(postRun);
+			}
+		}}
+			
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null && !chunks[z][x].q.isEmpty()) {
+				return false;
+			}
+		}}
+			
+		return true;
 	}
 	
 	public int getBlockType(int x, int y, int z) {

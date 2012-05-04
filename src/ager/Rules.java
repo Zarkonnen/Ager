@@ -57,8 +57,6 @@ public class Rules {
 				p(0.4).when(is(Sand)).when(below(Sandstone)).then(become(Sandstone));
 		rule().desc("Sandstone vanishing.").
 				p(0).when(is(Sandstone)).moreLikelyWhen(skyExposed(0.2)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
-		/*rule().desc("Sand vanishing.").
-				p(0.00).when(is(Sand)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));*/
 		rule().desc("Stone blocks vanishing.").
 				p(0.00001).when(is(Stone_Brick)).moreLikelyWhen(skyExposed(0.03)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Wooden planks vanishing.").

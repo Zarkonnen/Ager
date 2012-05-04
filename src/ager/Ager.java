@@ -12,13 +12,17 @@ public class Ager {
 		Random r = new Random();
 		
 		MCMap m = new MCMap(new File(args[0]));
-		m.calcSupport(false);
 		
-		int loops = args.length > 1 ? Integer.parseInt(args[1]) : 2;
+		m.calcSupport(false); //qqDPS EXTREME GRAVITYS
+		
+		int loops = args.length > 1 ? Integer.parseInt(args[1]) * 2 : 2;
 		for (int lp = 0; lp < loops; lp++) {
 			if (lp % 2 == 1) {
 				m.calcSupport(true);
-			}
+			}/* else {
+				continue; // qqDPS
+			}*/
+			
 			int fi = 0;
 			Rule.ApplicationCache ac = new Rule.ApplicationCache();
 			for (MCAFile f : m.files.values()) {
@@ -41,11 +45,17 @@ public class Ager {
 									}
 								} else {
 									if (ac.type > Types.Air &&
-										!f.chunks[zBlock][xBlock].isSupported.get(ly * 256 + lz * 16 + lx) &&
-										f.chunks[zBlock][xBlock].wasSupported.get(ly * 256 + lz * 16 + lx))
+										!f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx) &&
+										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
 									}
+									/*if (ac.type > Types.Air &&
+										f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx)
+									)
+									{
+										f.chunks[zBlock][xBlock].setBlockType((byte) Types.Gold_Block, lx, y, lz);
+									}*/
 								}
 							}}}
 						} 

@@ -21,6 +21,21 @@ public class MCMap {
 				files.put(new Point(x, z), new MCAFile(new File(worldF, "region"), x, z));
 			}
 		}
+		
+		for (MCAFile f : files.values()) {
+			for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+				int chunkX = f.xOffset * 32 + x;
+				int chunkZ = f.zOffset * 32 + z;
+				Chunk ch = getChunk(chunkX, chunkZ);
+				if (ch == null) { continue; }
+				for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
+					Chunk ch2 = getChunk(chunkX + dx, chunkZ + dz);
+					if (ch2 != null) {
+						ch.chunkCtx[dz + 1][dx + 1] = ch2;
+					}
+				}}
+			}}
+		}
 	}
 	
 	public void removeLighting() {
@@ -45,6 +60,24 @@ public class MCMap {
 	
 	static int rem(int c) {
 		return c - fileC(c) * 512;
+	}
+	
+	static int chunkFileC(int c) {
+		return c < 0 ? ((c + 1) / 32 - 1) : c / 32;
+	}
+	
+	static Point chunkFileP(int x, int z) {
+		return new Point(chunkFileC(x), chunkFileC(z));
+	}
+	
+	static int chunkRem(int c) {
+		return c - chunkFileC(c) * 32;
+	}
+	
+	public final Chunk getChunk(int chunkX, int chunkZ) {
+		Point fp = chunkFileP(chunkX, chunkZ);
+		if (!files.containsKey(fp)) { return null; }
+		return files.get(fp).getChunk(chunkRem(chunkX), chunkRem(chunkZ));
 	}
 	
 	public int getBlockType(int x, int y, int z) {
@@ -81,7 +114,19 @@ public class MCMap {
 	
 	public void calcSupport(boolean postRun) {
 		for (MCAFile f : files.values()) {
-			f.calcSupport(postRun);
+			f.initSupport(postRun);
+		}
+		
+		int pass = 1;
+		lp: while (true) {
+			System.out.println("FinishSupport pass " + pass++);
+			for (MCAFile f : files.values()) {
+				if (!f.finishSupport(postRun)) {
+					continue lp;
+				}
+			}
+			
+			return;
 		}
 	}
 	
