@@ -15,7 +15,7 @@ public class Chunk {
 	BitSet wasSupported = new BitSet(256 * 16 * 16); // yzx
 	BitSet isSupported = new BitSet(256 * 16 * 16); // yzx
 	boolean firstPass = true;
-	final LinkedList<Pt3> q = new LinkedList<Pt3>();
+	final Pt3Stack q = new Pt3Stack(8);
 	
 	public void initSupport(boolean postRun) {
 		firstPass = true;
@@ -28,7 +28,6 @@ public class Chunk {
 			int type = getBlockType(x, y, z);
 			while (type != Types.Air) {
 				supported.set(y * 256 + z * 16 + x);
-				//q.add(new Pt3(x, y, z));
 				if (y == 255) { break; }
 				y++;
 				type = getBlockType(x, y, z);
@@ -37,30 +36,30 @@ public class Chunk {
 	}
 	
 	public void floodFill(boolean postRun) {
-		//if (2 * 2 == 4) { q.clear(); return; }
-		
 		final BitSet supported = postRun ? isSupported : wasSupported;
 		if (firstPass) {
 			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
 				if (supported.get(y * 256 + z * 16 + x)) {
-					q.add(new Pt3(x, y, z));
+					q.push(x, y, z);
+					//q.add(new Pt3(x, y, z));
 				}
 			}}}
 			firstPass = false;
 		}
 		
 		while (!q.isEmpty()) {
-			Pt3 p = q.pop();
+			//Pt3 p = q.pop();
+			q.pop();
 			for (int dy = -1; dy < 2; dy++) {
-				int ny = p.y + dy;
+				int ny = q.y + dy;
 				if (ny < 0 || ny >= 256) { continue; }
 				for (int dx = -1; dx < 2; dx++) {
-					int nx = p.x + dx;
+					int nx = q.x + dx;
 					//if (nx < 0 || nx >= 16) { continue; }
 					for (int dz = -1; dz < 2; dz++) {
 						if (dy != 0 && dx != 0 && dz != 0) { continue; }
 						if (dy == 0 && dx == 0 && dz == 0) { continue; }
-						int nz = p.z + dz;
+						int nz = q.z + dz;
 						//if (nz < 0 || nz >= 16) { continue; }
 						if ((nx < 0 || nx >= 16) || (nz < 0 || nz >= 16)) {
 							// We've crossed state lines, er, chunk boundaries!
@@ -72,20 +71,25 @@ public class Chunk {
 							if (targetChunk == null) { continue; }
 							int xInOtherChunk = (nx + 16) % 16;
 							int zInOtherChunk = (nx + 16) % 16;
-							if (!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk) && getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air) {
+							if (!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk) && getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air)
+							{
 								(postRun ? targetChunk.isSupported : targetChunk.wasSupported).set(ny * 256 + zInOtherChunk * 16 + xInOtherChunk);
-								targetChunk.q.add(new Pt3(xInOtherChunk, ny, zInOtherChunk));
+								targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
+								//targetChunk.q.add(new Pt3(xInOtherChunk, ny, zInOtherChunk));
 							}
 						} else {
 							if (!supported.get(ny * 256 + nz * 16 + nx) && getBlockType(nx, ny, nz) > Types.Air) {
 								supported.set(ny * 256 + nz * 16 + nx);
-								q.add(new Pt3(nx, ny, nz));
+								q.push(nx, ny, nz);
+								//q.add(new Pt3(nx, ny, nz));
 							}
 						}
 					}
 				}
 			}
 		}
+		
+		q.compactTo(8);
 	}
 	
 	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
