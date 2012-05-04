@@ -3,7 +3,6 @@ package ager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.BitSet;
-import java.util.LinkedList;
 import unknown.Tag;
 
 public class Chunk {
@@ -48,7 +47,6 @@ public class Chunk {
 		}
 		
 		while (!q.isEmpty()) {
-			//Pt3 p = q.pop();
 			q.pop();
 			for (int dy = -1; dy < 2; dy++) {
 				int ny = q.y + dy;
@@ -75,13 +73,11 @@ public class Chunk {
 							{
 								(postRun ? targetChunk.isSupported : targetChunk.wasSupported).set(ny * 256 + zInOtherChunk * 16 + xInOtherChunk);
 								targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
-								//targetChunk.q.add(new Pt3(xInOtherChunk, ny, zInOtherChunk));
 							}
 						} else {
 							if (!supported.get(ny * 256 + nz * 16 + nx) && getBlockType(nx, ny, nz) > Types.Air) {
 								supported.set(ny * 256 + nz * 16 + nx);
 								q.push(nx, ny, nz);
-								//q.add(new Pt3(nx, ny, nz));
 							}
 						}
 					}
