@@ -51,6 +51,8 @@ public class Rules {
 				p(1).when(is(Dirt)).when(skyExposed()).when(nextTo(Grass)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
 				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.03, Air)).then(become(Air));
+		rule().desc("Gravel turning into soil.").
+				p(0.1).when(is(Gravel)).when(below(Air)).when(touching(Dirt)).then(become(Dirt));
 		rule().desc("Sand becoming sandstone.").
 				p(0.05).when(is(Sand)).when(below(Sand)).then(become(Sandstone));
 		rule().desc("Sand becoming sandstone.").
