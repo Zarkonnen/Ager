@@ -26,9 +26,13 @@ public class Chunk {
 		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
 			int y = 0;
 			int type = getBlockType(x, y, z);
-			while (type != Types.Air) {
+			//while (type != Types.Air) {
+			while (true) {
 				supported.set(y * 256 + z * 16 + x);
 				if (y == 255) { break; }
+				if (type != -1 && !Rules.providesSupport[type + 1]) {
+					break;
+				}
 				y++;
 				type = getBlockType(x, y, z);
 			}
@@ -36,10 +40,15 @@ public class Chunk {
 	}
 	
 	public void floodFill(boolean postRun) {
+		/*if (2 * 2 == 4) { // qqDPS
+			q.clear();
+			return;
+		}*/
+		
 		final BitSet supported = postRun ? isSupported : wasSupported;
 		if (firstPass) {
 			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
-				if (supported.get(y * 256 + z * 16 + x)) {
+				if (supported.get(y * 256 + z * 16 + x) && Rules.providesSupport[getBlockType(x, y, z) + 1]) {
 					q.push(x, y, z);
 				}
 			}}}
@@ -68,16 +77,31 @@ public class Chunk {
 							Chunk targetChunk = chunkCtx[chunkZOffset + 1][chunkXOffset + 1];
 							if (targetChunk == null) { continue; }
 							int xInOtherChunk = (nx + 16) % 16;
-							int zInOtherChunk = (nx + 16) % 16;
-							if (getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air && !(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk))
+							int zInOtherChunk = (nz + 16) % 16;
+							//if (getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air && !(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk))
+							int type = targetChunk.getBlockType(xInOtherChunk, ny, zInOtherChunk);
+							if (
+								type > Types.Air &&
+								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
+								!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk)
+							)
 							{
 								(postRun ? targetChunk.isSupported : targetChunk.wasSupported).set(ny * 256 + zInOtherChunk * 16 + xInOtherChunk);
-								targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
+								if (Rules.providesSupport[type + 1]) {
+									targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
+								}
 							}
 						} else {
-							if (getBlockType(nx, ny, nz) > Types.Air && !supported.get(ny * 256 + nz * 16 + nx)) {
+							//if (getBlockType(nx, ny, nz) > Types.Air && !supported.get(ny * 256 + nz * 16 + nx)) {
+							int type = getBlockType(nx, ny, nz);
+							if (type > Types.Air &&
+								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
+								!supported.get(ny * 256 + nz * 16 + nx))
+							{
 								supported.set(ny * 256 + nz * 16 + nx);
-								q.push(nx, ny, nz);
+								if (Rules.providesSupport[type + 1]) {
+									q.push(nx, ny, nz);
+								}
 							}
 						}
 					}

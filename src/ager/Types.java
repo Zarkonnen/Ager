@@ -38,7 +38,7 @@ public class Types {
 	public static final int Detector_Rail = 28;
 	public static final int Sticky_Piston = 29;
 	public static final int Web = 30;
-	public static final int Shrub_Or_Fern = 31;
+	public static final int Tall_Grass = 31;
 		public static final int Shrub_Or_Fern_Dead_Shrub = 0;
 		public static final int Shrub_Or_Fern_Tall_Grass = 1;
 		public static final int Shrub_Or_Fern_Fern = 2;

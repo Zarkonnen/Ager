@@ -15,9 +15,25 @@ public class Rules {
 	public static boolean[] ruleTypes = new boolean[1024];
 	public static final ArrayList<Rule>[] rulesForType = new ArrayList[1024];
 	public static int[] fallChanges = new int[1024];
+	public final static boolean[] providesSupport = new boolean[1024];
+	public final static boolean[] needsSupportFromBelow = new boolean[1024];
+	
+	static {
+		for (int i = 0; i < providesSupport.length; i++) {
+			providesSupport[i] = true;
+		}
+	}
 	
 	static void survivesFallAs(int type, int as) {
 		fallChanges[type] = as;
+	}
+	
+	static void doesNotSupport(int type) {
+		providesSupport[type + 1] = false;
+	}
+	
+	static void requiresSupportFromBelow(int type) {
+		needsSupportFromBelow[type + 1] = true;
 	}
 	
 	static {
@@ -38,6 +54,47 @@ public class Rules {
 		survivesFallAs(Diamond_Block, Diamond_Block);
 		survivesFallAs(Iron_Block, Iron_Block);
 		survivesFallAs(Gold_Block, Gold_Block);
+		
+		doesNotSupport(-1);
+		doesNotSupport(Air);
+		doesNotSupport(Tall_Grass);
+		doesNotSupport(Dead_Bush);
+		doesNotSupport(Dandelion);
+		doesNotSupport(Rose);
+		doesNotSupport(Brown_Mushroom);
+		doesNotSupport(Red_Mushroom);
+		doesNotSupport(Snow);
+		doesNotSupport(Vines);
+		doesNotSupport(Lily_Pad);
+		doesNotSupport(Web);
+		doesNotSupport(Torch);
+		doesNotSupport(Wheat_Crops);
+		doesNotSupport(Ladder);
+		doesNotSupport(Rails);
+		doesNotSupport(Wooden_Pressure_Plate);
+		doesNotSupport(Stone_Pressure_Plate);
+		doesNotSupport(Stone_Button);
+		doesNotSupport(Lever);
+		doesNotSupport(Fire);
+		doesNotSupport(Nether_Wart);
+		doesNotSupport(Brewing_Stand);
+		
+		requiresSupportFromBelow(Gravel);
+		requiresSupportFromBelow(Sand);
+		requiresSupportFromBelow(Tall_Grass);
+		requiresSupportFromBelow(Dead_Bush);
+		requiresSupportFromBelow(Dandelion);
+		requiresSupportFromBelow(Rose);
+		requiresSupportFromBelow(Brown_Mushroom);
+		requiresSupportFromBelow(Red_Mushroom);
+		requiresSupportFromBelow(Snow);
+		requiresSupportFromBelow(Wheat_Crops);
+		requiresSupportFromBelow(Rails);
+		requiresSupportFromBelow(Chest);
+		requiresSupportFromBelow(Wooden_Pressure_Plate);
+		requiresSupportFromBelow(Stone_Pressure_Plate);
+		requiresSupportFromBelow(Nether_Wart);
+		requiresSupportFromBelow(Brewing_Stand);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));

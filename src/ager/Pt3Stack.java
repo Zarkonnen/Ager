@@ -12,6 +12,7 @@ public final class Pt3Stack {
 	public int size() { return headPtr / 3 + 1; }
 	public int capacity() { return data.length / 3; }
 	public boolean isEmpty() { return headPtr == -3; }
+	public void clear() { headPtr = -3; }
 	public void push(int x, int y, int z) {
 		headPtr += 3;
 		if (headPtr == data.length) {
