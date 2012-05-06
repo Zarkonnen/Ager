@@ -83,6 +83,7 @@ public class Chunk {
 							if (
 								type > Types.Air &&
 								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
+								((dy != 0 && dx == 0 && dz == 0) || (dy == 0 && dx != 0 && dz == 0) || (dy == 0 && dx == 0 && dz != 0) || !Rules.needsSupportFromFaces[type + 1]) &&
 								!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk)
 							)
 							{
@@ -96,6 +97,7 @@ public class Chunk {
 							int type = getBlockType(nx, ny, nz);
 							if (type > Types.Air &&
 								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
+								((dy != 0 && dx == 0 && dz == 0) || (dy == 0 && dx != 0 && dz == 0) || (dy == 0 && dx == 0 && dz != 0) || !Rules.needsSupportFromFaces[type + 1]) &&
 								!supported.get(ny * 256 + nz * 16 + nx))
 							{
 								supported.set(ny * 256 + nz * 16 + nx);

@@ -17,6 +17,7 @@ public class Rules {
 	public static int[] fallChanges = new int[1024];
 	public final static boolean[] providesSupport = new boolean[1024];
 	public final static boolean[] needsSupportFromBelow = new boolean[1024];
+	public final static boolean[] needsSupportFromFaces = new boolean[1024];
 	
 	static {
 		for (int i = 0; i < providesSupport.length; i++) {
@@ -34,6 +35,10 @@ public class Rules {
 	
 	static void requiresSupportFromBelow(int type) {
 		needsSupportFromBelow[type + 1] = true;
+	}
+	
+	static void requiresDirectSupport(int type) {
+		needsSupportFromFaces[type + 1] = true;
 	}
 	
 	static {
@@ -95,6 +100,12 @@ public class Rules {
 		requiresSupportFromBelow(Stone_Pressure_Plate);
 		requiresSupportFromBelow(Nether_Wart);
 		requiresSupportFromBelow(Brewing_Stand);
+		
+		requiresDirectSupport(Glass_Pane);
+		requiresDirectSupport(Fence);
+		requiresDirectSupport(Fence_Gate);
+		requiresDirectSupport(Nether_Brick_Fence);
+		requiresDirectSupport(Iron_Bars);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
