@@ -294,7 +294,7 @@ public class Rule {
 	public static void fall(int x, int y, int z, MCMap map, int becomes) {
 		// how deep can we go?
 		int fallY = y;
-		while (map.getBlockType(x, --fallY, z) == Types.Air) {}
+		while (Rules.fallThru[map.getBlockType(x, --fallY, z) + 1]) {}
 		fallY++;
 		if (fallY < y) {
 			if (becomes != Types.Air) { map.setBlockType((byte) becomes, x, fallY, z); }
@@ -325,7 +325,7 @@ public class Rule {
 				if (dx == 0 && dz == 0) { continue; }
 				if (dx != 0 && dz != 0) { continue; }
 				int dist = -1;
-				while (map.getBlockType(x + dx, y - ++dist, z + dz) == Types.Air) {}
+				while (Rules.fallThru[map.getBlockType(x + dx, y - ++dist, z + dz) + 1]) {}
 				dist--;
 				if (dist >= minDistance && dist > bestDistance) {
 					bestDx = dx;

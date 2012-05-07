@@ -18,6 +18,7 @@ public class Rules {
 	public final static boolean[] providesSupport = new boolean[1024];
 	public final static boolean[] needsSupportFromBelow = new boolean[1024];
 	public final static boolean[] needsSupportFromFaces = new boolean[1024];
+	public final static boolean[] fallThru = new boolean[1024];
 	
 	static {
 		for (int i = 0; i < providesSupport.length; i++) {
@@ -39,6 +40,10 @@ public class Rules {
 	
 	static void requiresDirectSupport(int type) {
 		needsSupportFromFaces[type + 1] = true;
+	}
+	
+	static void itemsFallThrough(int type) {
+		fallThru[type + 1] = true;
 	}
 	
 	static {
@@ -107,6 +112,12 @@ public class Rules {
 		requiresDirectSupport(Nether_Brick_Fence);
 		requiresDirectSupport(Iron_Bars);
 		
+		itemsFallThrough(Air);
+		itemsFallThrough(Water);
+		itemsFallThrough(Stationary_Water);
+		itemsFallThrough(Lava);
+		itemsFallThrough(Stationary_Lava);
+		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
@@ -136,7 +147,7 @@ public class Rules {
 		rule().desc("Crafting table vanishing.").
 				p(0.1).when(is(Crafting_Table)).then(become(Air));
 		rule().desc("Furnace vanishing.").
-				p(0.01).when(is(Furnace)).then(become(Air));
+				p(0.05).when(is(Furnace)).then(become(Air));
 		rule().desc("Enchantment table breaking.").
 				p(0.001).when(is(Enchantment_Table)).then(become(Obsidian));
 		rule().desc("Enchantment table breaking, but in a nice way.").
@@ -211,6 +222,8 @@ public class Rules {
 				p(0.4).when(is(Wheat_Crops)).then(become(Air));
 		rule().desc("Torch vanishing.").
 				p(0.65).when(is(Torch)).then(become(Air));
+		rule().desc("Bookcases rotting.").
+				p(0.1).when(is(Bookshelf)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
 		
 		rule().desc("Slabs weathering.").
 				p(0.00001).when(is(Stone_Slab)).when(hasData(Stone_Slab_Stone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
