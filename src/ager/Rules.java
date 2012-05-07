@@ -118,7 +118,7 @@ public class Rules {
 		rule().desc("Grass growth.").
 				p(1).when(is(Dirt)).when(skyExposed()).when(nextTo(Grass)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
-				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.03, Air)).then(become(Air));
+				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.003, Air)).then(become(Air));
 		rule().desc("Gravel turning into soil.").
 				p(0.1).when(is(Gravel)).when(below(Air)).when(touching(Dirt)).then(become(Dirt));
 		rule().desc("Sand becoming sandstone.").
@@ -269,6 +269,18 @@ public class Rules {
 				p(0.05).when(is(Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		rule().desc("Stone brick stairs weathering.").
 				p(0.01).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
+		
+		// Sliding and falling.
+		rule().desc("Gravel heaping.").
+				p(1.0).when(is(Gravel)).when(below(Air)).then(slideDown(1)).recurseDownwardsOnSuccess();
+		rule().desc("Sand heaping.").
+				p(0.5).when(is(Sand)).when(below(Air)).then(slideDown(2)).recurseDownwardsOnSuccess();
+		rule().desc("Sandstone falling.").
+				p(0.01).when(is(Sandstone)).when(nextTo(Air)).then(become(Sand)).then(slideDown(2));
+		rule().desc("Cobble falling.").
+				p(0.01).when(is(Cobblestone)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
+		rule().desc("Bricks falling.").
+				p(0.01).when(is(Brick)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
 		
 		for (Rule r : rules) {
 			int type = -1;

@@ -37,7 +37,9 @@ public class Ager {
 								int y = ySection * 16 + ly;
 								int z = f.zOffset * 512 + zBlock * 16 + lz;
 								ac.type = sectionData[((ly * 16 + lz) * 16 + lx)];
-								ac.typeKnown = true;
+								ac.knownX = x;
+								ac.knownY = y;
+								ac.knownZ = z;
 								if (lp % 2 == 0) {
 									if (!Rules.ruleTypes[ac.type + 1]) { continue; }
 									for (Rule rule : Rules.rulesForType[ac.type + 1]) {

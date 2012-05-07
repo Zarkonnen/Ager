@@ -6,16 +6,20 @@ import java.util.Random;
 public class Rule {
 	public static class ApplicationCache {
 		int type;
-		boolean typeKnown;
+		int knownX, knownY, knownZ;
 		public int getType(int x, int y, int z, MCMap map) {
-			if (typeKnown) { return type; }
+			if (x == knownX && y == knownY && z == knownZ) { return type; }
 			type = map.getBlockType(x, y, z);
-			typeKnown = true;
+			knownX = x;
+			knownY = y;
+			knownZ = z;
 			return type;
 		}
 		
 		public void clear() {
-			typeKnown = false;
+			knownX = Integer.MIN_VALUE;
+			knownY = Integer.MIN_VALUE;
+			knownZ = Integer.MIN_VALUE;
 		}
 	}
 	
@@ -24,12 +28,14 @@ public class Rule {
 	public final ArrayList<Outcome> outcomes = new ArrayList<Outcome>();
 	public double baseProbability = 1.0;
 	public String description;
+	public boolean recurseDownwardsOnSuccess = false;
 		
 	public Rule desc(String d) { description = d; return this; }
 	public Rule p(double p) { baseProbability = p; return this; }
 	public Rule when(Condition c) { conditions.add(c); return this; }
 	public Rule moreLikelyWhen(ProbabilityModifier m) { modifiers.add(m); return this; }
 	public Rule then(Outcome o) { outcomes.add(o); return this; }
+	public Rule recurseDownwardsOnSuccess() { recurseDownwardsOnSuccess = true; return this; }
 	
 	public boolean apply(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
 		for (Condition c : conditions) {
@@ -44,7 +50,11 @@ public class Rule {
 			return false;
 		}
 		
-		for (Outcome o : outcomes) { o.perform(x, y, z, map); }
+		for (Outcome o : outcomes) { if (!o.perform(x, y, z, map)) { return false; } }
+		if (recurseDownwardsOnSuccess && y > 0) {
+			//System.out.println("rec");
+			apply(x, y - 1, z, map, r, ac);
+		}
 		return true;
 	}
 	
@@ -99,7 +109,7 @@ public class Rule {
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac);
 	}
 	public static interface Outcome {
-		public void perform(int x, int y, int z, MCMap map);
+		public boolean perform(int x, int y, int z, MCMap map);
 	}
 	
 	public static class Is implements Check {
@@ -258,13 +268,14 @@ public class Rule {
 		}
 		
 		@Override
-		public void perform(int x, int y, int z, MCMap map) {
+		public boolean perform(int x, int y, int z, MCMap map) {
 			map.setBlockType((byte) type, x, y, z);
 			if (type == Types.Air) {
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
 				map.healBlockLight(x, y, z);
 				map.healSkyLight(x, y, z); // ?
 			}
+			return true;
 		}
 	}
 	
@@ -272,8 +283,9 @@ public class Rule {
 	
 	public static class Fall implements Outcome {
 		@Override
-		public void perform(int x, int y, int z, MCMap map) {
+		public boolean perform(int x, int y, int z, MCMap map) {
 			fall(x, y, z, map, map.getBlockType(x, y, z));
+			return true;
 		}
 	}
 	
@@ -295,4 +307,43 @@ public class Rule {
 			}
 		}
 	}
+	
+	public static class SlideDown implements Outcome {
+		final int minDistance;
+
+		public SlideDown(int minDistance) {
+			this.minDistance = minDistance;
+		}
+		
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map) {
+			//System.out.println("slideDown " + x + "/" + y + "/" + z);
+			int bestDx = 0;
+			int bestDz = 0;
+			int bestDistance = 0;
+			for (int dx = -1; dx < 2; dx++) { for (int dz = -1; dz < 2; dz++) {
+				if (dx == 0 && dz == 0) { continue; }
+				if (dx != 0 && dz != 0) { continue; }
+				int dist = -1;
+				while (map.getBlockType(x + dx, y - ++dist, z + dz) == Types.Air) {}
+				dist--;
+				if (dist >= minDistance && dist > bestDistance) {
+					bestDx = dx;
+					bestDz = dz;
+					bestDistance = dist;
+				}
+			}}
+			//System.out.println(bestDistance + " " + bestDx + " " + bestDz);
+			if (bestDistance > 0) {
+				map.setBlockType((byte) map.getBlockType(x, y, z), x + bestDx, y - bestDistance, z + bestDz);
+				map.setBlockType((byte) Types.Air, x, y, z);
+				map.healBlockLight(x, y, z);
+				// Light?
+				return true;
+			}
+			return false;
+		}
+	}
+	
+	public static Outcome slideDown(int minDistance) { return new SlideDown(minDistance); }
 }
