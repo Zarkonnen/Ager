@@ -177,4 +177,28 @@ public class MCAFile {
 		if (chunks[chunkZ][chunkX] == null) { return; }
 		chunks[chunkZ][chunkX].setTileEntity(te, x % 16, y, z % 16, globX, globY, globZ);
 	}
+	
+	public void calculateInitialSkyLights() {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].calculateInitialSkyLights();
+			}
+		}}
+	}
+	
+	public boolean finishSkyLights() {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].skyLightFloodFill();
+			}
+		}}
+			
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null && !chunks[z][x].lightQ.isEmpty()) {
+				return false;
+			}
+		}}
+			
+		return true;
+	}
 }

@@ -252,4 +252,22 @@ public class MCMap {
 			}
 		}
 	}
+	
+	public void calcSkyLight() {
+		for (MCAFile f : files.values()) {
+			f.calculateInitialSkyLights();
+		}
+		
+		int pass = 1;
+		lp: while (true) {
+			System.out.println("FinishSkyLights pass " + pass++);
+			for (MCAFile f : files.values()) {
+				if (!f.finishSkyLights()) {
+					continue lp;
+				}
+			}
+			
+			return;
+		}
+	}
 }

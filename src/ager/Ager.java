@@ -27,6 +27,7 @@ public class Ager {
 			}
 			if (lp % 4 == 3) {
 				m.removeLighting();
+				m.calcSkyLight();
 			}
 			
 			int fi = 0;
@@ -35,10 +36,10 @@ public class Ager {
 				for (int zBlock = 0; zBlock < 32; zBlock++) {
 					for (int xBlock = 0; xBlock < 32; xBlock++) {
 						if (f.chunks[zBlock][xBlock] == null) { continue; }
-						if (lp % 4 == 3) {
-							f.chunks[zBlock][xBlock].calculateSkyLights(lightQ, f.xOffset * 512 + xBlock * 16, f.zOffset * 512 + zBlock * 16);
+						/*if (lp % 4 == 3) {
+							f.chunks[zBlock][xBlock].calculateInitialSkyLights(lightQ, f.xOffset * 512 + xBlock * 16, f.zOffset * 512 + zBlock * 16);
 							m.floodSkyLight(lightQ);
-						}
+						}*/
 						for (int ySection = 0; ySection < 16; ySection++) {
 							if (f.chunks[zBlock][xBlock].sections[ySection] == null) { continue; }
 							byte[] sectionData = (byte[]) f.chunks[zBlock][xBlock].sections[ySection].findTagByName("Blocks").getValue();

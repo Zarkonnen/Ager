@@ -19,6 +19,21 @@ public class Chunk {
 	
 	BitSet partOfBlob = new BitSet(256 * 16 * 16);
 	
+	final BytePt4Stack lightQ = new BytePt4Stack(8);
+	byte[][] sectionSkyLights = new byte[16][0];
+	
+	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
+		t = Tag.readFrom(is);
+		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
+		for (Tag section : sArray) {
+			this.sections[(Byte) section.findTagByName("Y").getValue()] = section;
+			this.sectionBlocks[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("Blocks").getValue();
+			this.sectionSkyLights[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("SkyLight").getValue();
+		}
+		this.globalChunkX = globalChunkX;
+		this.globalChunkZ = globalChunkZ;
+	}
+	
 	public void initSupport(boolean postRun) {
 		firstPass = true;
 		isSupported.clear();
@@ -116,18 +131,6 @@ public class Chunk {
 		q.compactTo(8);
 	}
 	
-	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
-		t = Tag.readFrom(is);
-		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
-		for (Tag section : sArray) {
-			this.sections[(Byte) section.findTagByName("Y").getValue()] = section;
-			this.sectionBlocks[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("Blocks").getValue();
-		}
-		this.globalChunkX = globalChunkX;
-		this.globalChunkZ = globalChunkZ;
-	}
-	
-	
 	public void removeLighting() {
 		byte[] empty = new byte[2048];
 		
@@ -222,7 +225,8 @@ public class Chunk {
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
 		int addr = ((remY * 16 + z) * 16 + x);
-		byte b = ((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2];
+		//byte b = ((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2];
+		byte b = sectionSkyLights[section][addr / 2];
 		return getNybble(b, addr % 2);
 	}
 	
@@ -232,8 +236,10 @@ public class Chunk {
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
 		int addr = ((remY * 16 + z) * 16 + x);
-		byte b = ((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2];
-		((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
+		//byte b = ((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2];
+		byte b = sectionSkyLights[section][addr / 2];
+		//((byte[]) sections[section].findTagByName("SkyLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
+		sectionSkyLights[section][addr / 2] = setNybble(b, addr % 2, light);
 	}
 	
 	public int getBlockLight(int x, int y, int z) {
@@ -256,7 +262,7 @@ public class Chunk {
 		((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
 	}
 	
-	public void calculateSkyLights(IntPt4Stack q, int blockX, int blockZ) {
+	public void calculateInitialSkyLights(IntPt4Stack q, int blockX, int blockZ) {
 		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
 			int y = 255;
 			int l = 15;
@@ -269,6 +275,71 @@ public class Chunk {
 				type = getBlockType(x, y, z);
 			}
 		}}
+	}
+	
+	public void calculateInitialSkyLights() {
+		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+			int y = 255;
+			int l = 15;
+			int type = getBlockType(x, y, z);
+			while (Rules.transparent[type + 1]) {
+				setSkyLight((byte) l, x, y, z);
+				lightQ.push(x, y, z, l - 1);
+				y--;
+				if (y < 0) { return; }
+				type = getBlockType(x, y, z);
+			}
+		}}
+	}
+	
+	static final int[] NS_X = {-1, 1, 0, 0, 0, 0 };
+	static final int[] NS_Y = { 0, 0,-1, 1, 0, 0 };
+	static final int[] NS_Z = { 0, 0, 0, 0,-1, 1 };
+	
+	public void skyLightFloodFill() {
+		while (!lightQ.isEmpty()) {
+			lightQ.pop();
+			for (int j = 0; j < 6; j++) {
+				int nx = lightQ.x + NS_X[j];
+				int ny = lightQ.y + NS_Y[j];
+				int nz = lightQ.z + NS_Z[j];
+				if (ny < 0 || ny >= 256) { continue; }
+				
+				if ((nx < 0 || nx >= 16) || (nz < 0 || nz >= 16)) {
+					// We've crossed state lines, er, chunk boundaries!
+					int chunkXOffset =
+							nx < 0 ? -1 : nx >= 16 ? 1 : 0;
+					int chunkZOffset =
+							nz < 0 ? -1 : nz >= 16 ? 1 : 0;
+					Chunk targetChunk = chunkCtx[chunkZOffset + 1][chunkXOffset + 1];
+					if (targetChunk == null) { continue; }
+					int xInOtherChunk = (nx + 16) % 16;
+					int zInOtherChunk = (nz + 16) % 16;
+					
+					int localType = targetChunk.getBlockType(xInOtherChunk, ny, zInOtherChunk);
+					if (!Rules.transparent[localType + 1]) { continue; }
+					int localL = targetChunk.getSkyLight(xInOtherChunk, ny, zInOtherChunk);
+					if (localL == -1) { continue; } // There is no block there.
+					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
+					targetChunk.setSkyLight((byte) lightQ.l, xInOtherChunk, ny, zInOtherChunk);
+					if (lightQ.l > 1) {
+						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, lightQ.l - 1);
+					}
+				} else {
+					int localType = getBlockType(nx, ny, nz);
+					if (!Rules.transparent[localType + 1]) { continue; }
+					int localL = getSkyLight(nx, ny, nz);
+					if (localL == -1) { continue; } // There is no block there.
+					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
+					setSkyLight((byte) lightQ.l, nx, ny, nz);
+					if (lightQ.l > 1) {
+						lightQ.push(nx, ny, nz, lightQ.l - 1);
+					}
+				}
+			}
+		}
+		
+		lightQ.compactTo(8);
 	}
 	
 	public void clearTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
