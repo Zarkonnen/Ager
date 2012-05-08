@@ -42,9 +42,16 @@ public class Ager {
 								ac.knownY = y;
 								ac.knownZ = z;
 								if (lp % 3 == 0) {
-									if (!Rules.ruleTypes[ac.type + 1]) { continue; }
-									for (Rule rule : Rules.rulesForType[ac.type + 1]) {
-										if (rule.apply(x, y, z, m, r, ac)) { break; }
+									boolean changed = false;
+									if (Rules.ruleTypes[ac.type + 1]) {
+										for (Rule rule : Rules.rulesForType[ac.type + 1]) {
+											if (rule.apply(x, y, z, m, r, ac)) { changed = true; break; }
+										}
+									}
+									if (!changed && Rules.checkTileEntity[ac.type + 1]) {
+										for (StoredItemRule sir : Rules.storedItemRules) {
+											sir.run(x, y, z, m, r, ac);
+										}
 									}
 								}
 								if (lp % 3 == 1) {

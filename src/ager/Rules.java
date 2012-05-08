@@ -6,6 +6,7 @@ import static ager.Rule.*;
 import static ager.Types.*;
 import static ager.Blueprints.*;
 import java.util.Random;
+import javax.swing.text.DefaultEditorKit.BeepAction;
 import unknown.Tag;
 
 public class Rules {
@@ -35,6 +36,16 @@ public class Rules {
 	public final static boolean[] needsSupportFromFaces = new boolean[1024];
 	public final static boolean[] fallThru = new boolean[1024];
 	public static final boolean[] checkTileEntity = new boolean[1024];
+	
+	public static final ArrayList<StoredItemRule> storedItemRules = new ArrayList<StoredItemRule>();
+	
+	static void itemVanishes(int type, double p) {
+		storedItemRules.add(new StoredItemRule(type, p, -1));
+	}
+	
+	static void itemBecomes(int type, double p, int newType) {
+		storedItemRules.add(new StoredItemRule(type, p, newType));
+	}
 	
 	static {
 		for (int i = 0; i < providesSupport.length; i++) {
@@ -67,6 +78,80 @@ public class Rules {
 	}
 	
 	static {
+		itemVanishes(Dandelion, 0.4);
+		itemVanishes(Rose, 0.4);
+		itemVanishes(Wool, 0.2);
+		itemVanishes(Brown_Mushroom, 0.5);
+		itemVanishes(Red_Mushroom, 0.5);
+		itemVanishes(Wooden_Stairs, 0.1);
+		itemVanishes(Wooden_Door, 0.1);
+		itemVanishes(Wood, 0.01);
+		itemVanishes(Wooden_Plank, 0.1);
+		itemVanishes(Ladder, 0.1);
+		itemVanishes(Sign, 0.1);
+		itemVanishes(Sugarcane, 0.2);
+		itemVanishes(Pumpkin, 0.4);
+		itemVanishes(Pumpkin_Seeds, 0.05);
+		itemVanishes(Trapdoor, 0.1);
+		itemVanishes(Vines, 0.7);
+		itemVanishes(Fence, 0.1);
+		itemVanishes(Fence_Gate, 0.1);
+		itemVanishes(Iron_Axe, 0.05);
+		itemVanishes(Iron_Boots, 0.05);
+		itemVanishes(Iron_Door, 0.05);
+		itemVanishes(Iron_Chestplate, 0.05);
+		itemVanishes(Iron_Hoe, 0.05);
+		itemVanishes(Iron_Helmet, 0.05);
+		itemVanishes(Iron_Leggings, 0.05);
+		itemVanishes(Iron_Pickaxe, 0.05);
+		itemVanishes(Iron_Shovel, 0.05);
+		itemVanishes(Iron_Sword, 0.05);
+		itemVanishes(Gold_Axe, 0.05);
+		itemVanishes(Gold_Boots, 0.05);
+		itemVanishes(Gold_Chestplate, 0.05);
+		itemVanishes(Gold_Hoe, 0.05);
+		itemVanishes(Gold_Helmet, 0.05);
+		itemVanishes(Gold_Leggings, 0.05);
+		itemVanishes(Gold_Pickaxe, 0.05);
+		itemVanishes(Gold_Shovel, 0.05);
+		itemVanishes(Gold_Sword, 0.05);
+		itemVanishes(Wooden_Axe, 0.2);
+		itemVanishes(Wooden_Hoe, 0.2);
+		itemVanishes(Wooden_Pickaxe, 0.2);
+		itemVanishes(Wooden_Shovel, 0.2);
+		itemVanishes(Wooden_Sword, 0.2);
+		itemVanishes(Leather_Boots, 0.3);
+		itemVanishes(Leather_Chestplate, 0.3);
+		itemVanishes(Leather_Helmet, 0.3);
+		itemVanishes(Leather_Leggings, 0.3);
+		itemVanishes(Apple, 0.4);
+		itemVanishes(String, 0.4);
+		itemVanishes(Feather, 0.4);
+		itemVanishes(Wheat_Seeds, 0.1);
+		itemVanishes(Wheat, 0.4);
+		itemVanishes(Bread, 0.8);
+		itemVanishes(Cookie, 0.7);
+		itemVanishes(Painting, 0.1);
+		itemVanishes(Saddle, 0.1);
+		itemVanishes(Snowball, 1.0);
+		itemVanishes(Leather, 0.3);
+		itemBecomes(Milk_Bucket, 1.0, Bucket);
+		itemVanishes(Lava_Bucket, 1.0);
+		itemVanishes(Paper, 0.1);
+		itemVanishes(Book, 0.01);
+		itemVanishes(Sugar, 0.3);
+		itemVanishes(Map, 0.1);
+		itemVanishes(Melon, 1.0);
+		itemVanishes(Rotten_Flesh, 0.02);
+		itemBecomes(Raw_Beef, 1.0, Rotten_Flesh);
+		itemBecomes(Raw_Chicken, 1.0, Rotten_Flesh);
+		itemBecomes(Raw_Fish, 1.0, Rotten_Flesh);
+		itemBecomes(Raw_Porkchop, 1.0, Rotten_Flesh);
+		itemBecomes(Steak, 0.8, Rotten_Flesh);
+		itemBecomes(Cooked_Chicken, 1.0, Rotten_Flesh);
+		itemBecomes(Cooked_Fish, 0.9, Rotten_Flesh);
+		itemBecomes(Cooked_Porkchop, 1.0, Rotten_Flesh);
+		
 		hasTileEntity(Chest);
 		hasTileEntity(Monster_Spawner);
 		hasTileEntity(Dispenser);
@@ -330,8 +415,8 @@ public class Rules {
 				p(0.3).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Chests
-		rule().desc("Chests disappear very rarely."). // qqDPS
-				p(1.0).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		rule().desc("Chests disappear very rarely.").
+				p(0.001).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Sliding and falling.
 		rule().desc("Gravel heaping.").
