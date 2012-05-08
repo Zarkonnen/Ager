@@ -589,6 +589,15 @@ public class Rules {
 		secondRule().desc("West levers despawning.").
 				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
 		
+		secondRule().desc("North levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_North_on)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_South_on)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_East_on)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_West_on)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
 		secondRule().desc("North buttons despawning.").
 				p(1.0).when(is(Stone_Button)).when(hasData(Stone_Button_Facing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
 		secondRule().desc("South buttons despawning.").

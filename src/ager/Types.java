@@ -130,7 +130,14 @@ public class Types {
 		public static final int Lever_Facing_South = 3;
 		public static final int Lever_Facing_North = 4;
 		public static final int Lever_On_Ground_South_When_Off = 5;
-		public static final int Lever_On_Ground_East_When_Off = 5;
+		public static final int Lever_On_Ground_East_When_Off = 6;
+		
+		public static final int Lever_Facing_East_on = 1 + 8;
+		public static final int Lever_Facing_West_on = 2 + 8;
+		public static final int Lever_Facing_South_on = 3 + 8;
+		public static final int Lever_Facing_North_on = 4 + 8;
+		public static final int Lever_On_Ground_South_When_Off_on = 5 + 8;
+		public static final int Lever_On_Ground_East_When_Off_on = 6 + 8;
 	public static final int Stone_Pressure_Plate = 70;
 	public static final int Iron_Door_Block = 71;
 	public static final int Wooden_Pressure_Plate = 72;
