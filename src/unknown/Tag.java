@@ -232,9 +232,15 @@ public class Tag {
         if (type != Type.TAG_List && type != Type.TAG_Compound)
             throw new RuntimeException();
         Tag[] subtags = (Tag[]) value;
-        if (subtags.length > 0)
-            if (type == Type.TAG_List && tag.getType() != getListType())
+        if (subtags.length > 0) {
+            if (type == Type.TAG_List && tag.getType() != getListType()) {
                 throw new IllegalArgumentException();
+			}
+		} else {
+			if (type == Type.TAG_List) {
+				listType = tag.getType(); // qqDPS
+			}
+		}
         if (index > subtags.length)
             throw new IndexOutOfBoundsException();
         Tag[] newValue = new Tag[subtags.length + 1];
@@ -414,7 +420,7 @@ public class Tag {
         DataOutputStream dos = new DataOutputStream(os);
         dos.writeByte(type.ordinal());
         if (type != Type.TAG_End) {
-            dos.writeUTF(name);
+            if (name != null) { dos.writeUTF(name); } // qqDPS
             writePayload(dos);
         }
         dos.flush();

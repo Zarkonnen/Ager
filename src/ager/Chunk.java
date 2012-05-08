@@ -128,7 +128,6 @@ public class Chunk {
 	}
 	
 	
-	
 	public void removeLighting() {
 		byte[] empty = new byte[2048];
 		
@@ -254,5 +253,61 @@ public class Chunk {
 		int addr = ((remY * 16 + z) * 16 + x);
 		byte b = ((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2];
 		((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
+	}
+	
+	public void clearTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
+		if (y < 0 || y > 255) { return; }
+		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
+		Tag[] tes = (Tag[]) tesN.getValue();
+		//System.out.println(tes);
+		for (int i = 0; i < tes.length; i++) {
+			/*System.out.println(tes[i].findTagByName("x").getValue());
+			System.out.println(tes[i].findTagByName("y").getValue());
+			System.out.println(tes[i].findTagByName("z").getValue());
+			System.out.println();*/
+			if (((Integer) tes[i].findTagByName("x").getValue()).equals(globX) &&
+				((Integer) tes[i].findTagByName("y").getValue()).equals(globY) &&
+				((Integer) tes[i].findTagByName("z").getValue()).equals(globZ))
+			{
+				tesN.removeTag(i);
+				//System.out.println("FOUND AND REMOVED!");
+				return;
+			}
+		}
+	}
+	
+	public Tag getTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
+		if (y < 0 || y > 255) { return null; }
+		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
+		Tag[] tes = (Tag[]) tesN.getValue();
+		for (int i = 0; i < tes.length; i++) {
+			if (((Integer) tes[i].findTagByName("x").getValue()).equals(globX) &&
+				((Integer) tes[i].findTagByName("y").getValue()).equals(globY) &&
+				((Integer) tes[i].findTagByName("z").getValue()).equals(globZ))
+			{
+				return tes[i];
+			}
+		}
+		
+		return null;
+	}
+	
+	public void setTileEntity(Tag te, int x, int y, int z, int globX, int globY, int globZ) {
+		if (y < 0 || y > 255) { return; }
+		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
+		Tag[] tes = (Tag[]) tesN.getValue();
+		for (int i = 0; i < tes.length; i++) {
+			if (((Integer) tes[i].findTagByName("x").getValue()).equals(globX) &&
+				((Integer) tes[i].findTagByName("y").getValue()).equals(globY) &&
+				((Integer) tes[i].findTagByName("z").getValue()).equals(globZ))
+			{
+				tes[i] = te;
+				return;
+				/*tesN.removeTag(i);
+				break;*/
+			}
+		}
+		
+		tesN.addTag(te);
 	}
 }

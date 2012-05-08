@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import unknown.Tag;
 
 public class MCMap {
 	public final HashMap<Point, MCAFile> files = new HashMap<Point, MCAFile>();
@@ -182,5 +183,22 @@ public class MCMap {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return; }
 		files.get(fp).setBlockLight(light, rem(x), y, rem(z));
+	}
+
+	public void clearTileEntity(int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return; }
+		files.get(fp).clearTileEntity(rem(x), y, rem(z), x, y, z);
+	}
+	
+	public Tag getTileEntity(int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return null; }
+		return files.get(fp).getTileEntity(rem(x), y, rem(z), x, y, z);
+	}
+	public void setTileEntity(Tag te, int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return; }
+		files.get(fp).setTileEntity(te, rem(x), y, rem(z), x, y, z);
 	}
 }

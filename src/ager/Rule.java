@@ -299,6 +299,9 @@ public class Rule {
 		
 		@Override
 		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
+				map.clearTileEntity(x, y, z);
+			}
 			map.setBlockType((byte) type, x, y, z);
 			if (type == Types.Air) {
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
@@ -328,6 +331,9 @@ public class Rule {
 		fallY++;
 		if (fallY < y) {
 			if (becomes != Types.Air) { map.setBlockType((byte) becomes, x, fallY, z); }
+			if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
+				map.clearTileEntity(x, y, z);
+			}
 			map.setBlockType((byte) Types.Air, x, y, z);
 			map.healBlockLight(x, y, z);
 			if (becomes == Types.Air) {
@@ -366,6 +372,9 @@ public class Rule {
 			//System.out.println(bestDistance + " " + bestDx + " " + bestDz);
 			if (bestDistance > 0) {
 				map.setBlockType((byte) map.getBlockType(x, y, z), x + bestDx, y - bestDistance, z + bestDz);
+				if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
+					map.clearTileEntity(x, y, z);
+				}
 				map.setBlockType((byte) Types.Air, x, y, z);
 				map.healBlockLight(x, y, z);
 				// Light?
@@ -529,6 +538,25 @@ public class Rule {
 	
 	public static Outcome applyNearby(int dist, Rule r) { return new ApplyNearby(r, dist); }
 	
+	public static class ApplyRelative implements Outcome {
+		final Rule rule;
+		final int dx, dy, dz;
+
+		public ApplyRelative(Rule rule, int dx, int dy, int dz) {
+			this.rule = rule;
+			this.dx = dx;
+			this.dy = dy;
+			this.dz = dz;
+		}
+		
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			return rule.apply(x + dx, y + dy, z + dz, map, r, ac);
+		}
+	}
+	
+	public static Outcome applyRelative(int dx, int dy, int dz, Rule r) { return new ApplyRelative(r, dx, dy, dz); }
+	
 	public static class CreateStructure implements Outcome {
 		final int[][][] structure; // yzx
 		final int[][][] structureData; // yzx
@@ -580,6 +608,9 @@ public class Rule {
 						int ly = y + sy + yOffset;
 						int lz = z + sz + zOffset;
 						if (structure[sy][sz][sx] != -1) {
+							if (Rules.checkTileEntity[map.getBlockType(sx, sy, sz) + 1]) {
+								map.clearTileEntity(sx, sy, sz);
+							}
 							map.setBlockType((byte) structure[sy][sz][sx], lx, ly, lz);
 							//System.out.println("Placed " + structure[sy][sz][sx]);
 						}

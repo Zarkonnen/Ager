@@ -1,9 +1,12 @@
 package ager;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import static ager.Rule.*;
 import static ager.Types.*;
 import static ager.Blueprints.*;
+import java.util.Random;
+import unknown.Tag;
 
 public class Rules {
 	static Rule rule() {
@@ -31,6 +34,7 @@ public class Rules {
 	public final static boolean[] needsSupportFromBelow = new boolean[1024];
 	public final static boolean[] needsSupportFromFaces = new boolean[1024];
 	public final static boolean[] fallThru = new boolean[1024];
+	public static final boolean[] checkTileEntity = new boolean[1024];
 	
 	static {
 		for (int i = 0; i < providesSupport.length; i++) {
@@ -58,7 +62,23 @@ public class Rules {
 		fallThru[type + 1] = true;
 	}
 	
+	static void hasTileEntity(int type) {
+		checkTileEntity[type + 1] = true;
+	}
+	
 	static {
+		hasTileEntity(Chest);
+		hasTileEntity(Monster_Spawner);
+		hasTileEntity(Dispenser);
+		hasTileEntity(Note_Block);
+		hasTileEntity(Furnace);
+		hasTileEntity(Sign_Post);
+		hasTileEntity(Wall_Sign);
+		hasTileEntity(Jukebox);
+		hasTileEntity(Enchantment_Table);
+		hasTileEntity(Brewing_Stand);
+		hasTileEntity(Cauldron);
+		
 		survivesFallAs(Sand, Sand);
 		survivesFallAs(Gravel, Gravel);
 		survivesFallAs(Cobblestone, Gravel);
@@ -214,8 +234,6 @@ public class Rules {
 				p(0.3).when(is(Trapdoor)).then(become(Air));
 		rule().desc("Signpost vanishing.").
 				p(0.7).when(is(Sign_Post)).then(become(Air));
-		rule().desc("Sign vanishing.").
-				p(0.7).when(is(Sign)).then(become(Air));
 		rule().desc("Ladder vanishing.").
 				p(0.3).when(is(Ladder)).then(become(Air));
 		rule().desc("Iron bars vanishing.").
@@ -311,6 +329,10 @@ public class Rules {
 		rule().desc("Beds disappear pretty quickly.").
 				p(0.3).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
+		// Chests
+		rule().desc("Chests disappear very rarely."). // qqDPS
+				p(1.0).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		
 		// Sliding and falling.
 		rule().desc("Gravel heaping.").
 				p(1.0).when(is(Gravel)).when(below(Air)).then(slideDown(1)).recurseDownwardsOnSuccess();
@@ -323,9 +345,30 @@ public class Rules {
 		rule().desc("Bricks falling.").
 				p(0.01).when(is(Brick)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
 		
+		// Hice, tmp. qqDPS
+		/*rule().desc("Spawning a house.").
+				p(1.0).when(is(Grass)).then(new CreateStructure(HOUSE, null, -2, 1, -2, 0, 15));*/
+		
 		// Spawning spawners
 		rule().desc("Spawning a spawner.").
-				p(1.0).when(is(Cobblestone)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0));
+				p(0.2).when(is(Cobblestone)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0)).
+				then(new Outcome()
+		{
+			@Override
+			public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+				Tag t = new Tag(Tag.Type.TAG_Compound, null, new Tag[] { new Tag(Tag.Type.TAG_End, null, null) });
+				t.addTag(new Tag(Tag.Type.TAG_String, "id", "MobSpawner"));
+				t.addTag(new Tag(Tag.Type.TAG_Short, "Delay", Short.valueOf((short) 265)));
+				t.addTag(new Tag(Tag.Type.TAG_Int, "z", Integer.valueOf(z)));
+				t.addTag(new Tag(Tag.Type.TAG_String, "EntityId",
+						new String[] {"Spider", "Skeleton", "Zombie"}[r.nextInt(3)]));
+				t.addTag(new Tag(Tag.Type.TAG_Int, "y", Integer.valueOf(y + 1)));
+				t.addTag(new Tag(Tag.Type.TAG_Int, "x", Integer.valueOf(x)));
+				
+				map.setTileEntity(t, x, y, z);
+				return true;
+			}
+		});
 		
 		// Spawning trees.
 		rule().desc("Spawning a tree.").

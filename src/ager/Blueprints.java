@@ -19,6 +19,44 @@ public class Blueprints {
 		}
 	};
 	
+	public static final int[][][] HOUSE = {
+		{
+			{Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone},
+			{Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone},
+			{Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone},
+			{Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone},
+			{Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone, Cobblestone},
+		},
+		{
+			{Stone, Stone, Air, Stone, Stone, Stone, Stone},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Air, Air, Air, Air, Air, Air, Air},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Stone, Stone, Air, Stone, Stone, Stone, Stone},
+		},
+		{
+			{Stone, Stone, Air, Stone, Stone, Stone, Stone},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Air, Air, Air, Air, Air, Air, Air},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Stone, Stone, Air, Stone, Stone, Stone, Stone},
+		},
+		{
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Stone, Air, Air, Air, Air, Air, Stone},
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+		},
+		{
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+			{Stone, Stone, Stone, Stone, Stone, Stone, Stone},
+		}
+	};
+	
 	public static final int[][][] TREE_6X5X5 = {
 		{
 			{-1 , -1 , -1 , -1 , -1 },

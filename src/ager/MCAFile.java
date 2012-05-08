@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import net.minecraft.world.level.chunk.storage.RegionFile;
+import unknown.Tag;
 
 public class MCAFile {
 	public final File file;
@@ -154,5 +155,26 @@ public class MCAFile {
 		int chunkZ = z / 16;
 		if (chunks[chunkZ][chunkX] == null) { return; }
 		chunks[chunkZ][chunkX].setBlockLight(light, x % 16, y, z % 16);
+	}
+	
+	public void clearTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return; }
+		chunks[chunkZ][chunkX].clearTileEntity(x % 16, y, z % 16, globX, globY, globZ);
+	}
+	
+	public Tag getTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return null; }
+		return chunks[chunkZ][chunkX].getTileEntity(x % 16, y, z % 16, globX, globY, globZ);
+	}
+	
+	public void setTileEntity(Tag te, int x, int y, int z, int globX, int globY, int globZ) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return; }
+		chunks[chunkZ][chunkX].setTileEntity(te, x % 16, y, z % 16, globX, globY, globZ);
 	}
 }
