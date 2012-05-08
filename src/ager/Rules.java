@@ -3,6 +3,7 @@ package ager;
 import java.util.ArrayList;
 import static ager.Rule.*;
 import static ager.Types.*;
+import static ager.Blueprints.*;
 
 public class Rules {
 	static Rule rule() {
@@ -321,6 +322,14 @@ public class Rules {
 				p(0.01).when(is(Cobblestone)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
 		rule().desc("Bricks falling.").
 				p(0.01).when(is(Brick)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
+		
+		// Spawning spawners
+		rule().desc("Spawning a spawner.").
+				p(1.0).when(is(Cobblestone)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0));
+		
+		// Spawning trees.
+		rule().desc("Spawning a tree.").
+				p(0.7).when(is(Sapling)).then(become(Air)).then(new CreateStructure(TREE_6X5X5, null, -2, 0, -2, 8, 15));
 		
 		// Detaching
 		secondRule().desc("North torches despawning.").
