@@ -1,12 +1,16 @@
 package ager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public class Rule {
 	public static class ApplicationCache {
 		int type;
 		int knownX, knownY, knownZ;
+		IntPt3Stack connectedBlob;
+		int cbKnownX, cbKnownY, cbKnownZ;
+		int[] cbTypes;
 		public int getType(int x, int y, int z, MCMap map) {
 			if (x == knownX && y == knownY && z == knownZ) { return type; }
 			type = map.getBlockType(x, y, z);
@@ -20,6 +24,15 @@ public class Rule {
 			knownX = Integer.MIN_VALUE;
 			knownY = Integer.MIN_VALUE;
 			knownZ = Integer.MIN_VALUE;
+			connectedBlob = null;
+			cbTypes = null;
+		}
+		
+		public IntPt3Stack getConnectedBlob(int x, int y, int z, int[] types) {
+			if (x == cbKnownX && y == cbKnownY && z == cbKnownZ && (types == null || (cbTypes != null && Arrays.equals(cbTypes, types)))) {
+				return connectedBlob;
+			}
+			return null;
 		}
 	}
 	
@@ -50,7 +63,7 @@ public class Rule {
 			return false;
 		}
 		
-		for (Outcome o : outcomes) { if (!o.perform(x, y, z, map)) { return false; } }
+		for (Outcome o : outcomes) { if (!o.perform(x, y, z, map, r, ac)) { return false; } }
 		if (recurseDownwardsOnSuccess && y > 0) {
 			//System.out.println("rec");
 			apply(x, y - 1, z, map, r, ac);
@@ -109,7 +122,7 @@ public class Rule {
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac);
 	}
 	public static interface Outcome {
-		public boolean perform(int x, int y, int z, MCMap map);
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac);
 	}
 	
 	public static class Is implements Check {
@@ -285,7 +298,7 @@ public class Rule {
 		}
 		
 		@Override
-		public boolean perform(int x, int y, int z, MCMap map) {
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
 			map.setBlockType((byte) type, x, y, z);
 			if (type == Types.Air) {
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
@@ -300,7 +313,7 @@ public class Rule {
 	
 	public static class Fall implements Outcome {
 		@Override
-		public boolean perform(int x, int y, int z, MCMap map) {
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
 			fall(x, y, z, map, map.getBlockType(x, y, z));
 			return true;
 		}
@@ -333,7 +346,7 @@ public class Rule {
 		}
 		
 		@Override
-		public boolean perform(int x, int y, int z, MCMap map) {
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
 			//System.out.println("slideDown " + x + "/" + y + "/" + z);
 			int bestDx = 0;
 			int bestDz = 0;
@@ -363,4 +376,156 @@ public class Rule {
 	}
 	
 	public static Outcome slideDown(int minDistance) { return new SlideDown(minDistance); }
+		
+	public static class IsConnectedBlobOf implements Check {
+		final int[] types;
+
+		public IsConnectedBlobOf(int[] types) {
+			this.types = types;
+			Arrays.sort(types);
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			IntPt3Stack b = ac.getConnectedBlob(x, y, z, types);
+			if (b != null) { return 1; }
+			if (Arrays.binarySearch(types, ac.getType(x, y, z, map)) < 0) { return 0; }
+			if (map.getPartOfBlob(x, y, z)) { return 0; } // Already evaluated this blob.
+			/*System.out.println("Blob found.");
+			System.out.println("Blob initial block is " + ac.getType(x, y, z, map));*/
+			IntPt3Stack q = new IntPt3Stack(10);
+			IntPt3Stack blob = new IntPt3Stack(10);
+			q.push(x, y, z);
+			blob.push(x, y, z);
+			map.setPartOfBlob(x, y, z, true);
+			while (!q.isEmpty()) {
+				q.pop();
+				for (int dy = -1; dy < 2; dy++) {
+					int ny = q.y + dy;
+					if (ny < 0 || ny >= 256) { continue; }
+					for (int dx = -1; dx < 2; dx++) {
+						int nx = q.x + dx;
+						for (int dz = -1; dz < 2; dz++) {
+							if (dy != 0 && dx != 0 && dz != 0) { continue; }
+							if (dy == 0 && dx == 0 && dz == 0) { continue; }
+							int nz = q.z + dz;
+							if (Arrays.binarySearch(types, map.getBlockType(nx, ny, nz)) >= 0 && !map.getPartOfBlob(nx, ny, nz)) {
+								//System.out.println(map.getBlockType(nx, ny, nz));
+								blob.push(nx, ny, nz);
+								q.push(nx, ny, nz);
+								map.setPartOfBlob(nx, ny, nz, true);
+							}
+						}
+					}
+				}
+			}
+			ac.connectedBlob = blob;
+			ac.cbTypes = types;
+			ac.cbKnownX = x;
+			ac.cbKnownY = y;
+			ac.cbKnownZ = z;
+			/*System.out.println(blob.size());
+			for (int i = 0; i < blob.size(); i++) {
+				blob.get(i);
+				System.out.print(map.getBlockType(blob.x, blob.y, blob.z) + " ");
+			}
+			System.out.println();*/
+			return 1;
+		}
+	}
+	
+	public static Condition isConnectedBlobOf(int... types) { return new MinimumCondition(new IsConnectedBlobOf(types), 1); }
+	
+	public static class ConnectedBlobTypeCount implements Check {
+		final int type;
+
+		public ConnectedBlobTypeCount(int type) {
+			this.type = type;
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			IntPt3Stack blob = ac.getConnectedBlob(x, y, z, null);
+			if (blob == null) { return 0; }
+			int count = 0;
+			for (int i = 0; i < blob.size(); i++) {
+				blob.get(i);
+				if (map.getBlockType(blob.x, blob.y, blob.z) == type) {
+					count++;
+				}
+			}
+			return count;
+		}
+	}
+	
+	public static Condition connectedBlobContains(int type) { return new MinimumCondition(new ConnectedBlobTypeCount(type), 1); }
+	public static Condition connectedBlobDoesNotContain(int type) { return new MaximumCondition(new ConnectedBlobTypeCount(type), 0); }
+	
+	public static class ApplyIndividually implements Outcome {
+		final Rule rule;
+
+		public ApplyIndividually(Rule rule) {
+			this.rule = rule;
+		}
+		
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			IntPt3Stack blob = ac.getConnectedBlob(x, y, z, null);
+			if (blob == null) { return false; }
+			for (int i = 0; i < blob.size(); i++) {
+				blob.get(i);
+				rule.apply(blob.x, blob.y, blob.z, map, r, ac);
+			}
+			
+			return true;
+		}
+	}
+	
+	public static Outcome applyIndividually(Rule r) { return new ApplyIndividually(r); }
+	
+	public static class ApplyCollectively implements Outcome {
+		final Rule rule;
+
+		public ApplyCollectively(Rule rule) {
+			this.rule = rule;
+		}
+		
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			IntPt3Stack blob = ac.getConnectedBlob(x, y, z, null);
+			if (blob == null) { return false; }
+			if (r.nextDouble() > rule.baseProbability) { return false; }
+			for (int i = 0; i < blob.size(); i++) {
+				blob.get(i);
+				for (Outcome o : rule.outcomes) {
+					o.perform(blob.x, blob.y, blob.z, map, r, ac);
+				}
+			}
+			
+			return true;
+		}
+	}
+	
+	public static Outcome applyCollectively(Rule r) { return new ApplyCollectively(r); }
+	
+	public static class ApplyNearby implements Outcome {
+		final Rule rule;
+		final int dist;
+
+		public ApplyNearby(Rule rule, int dist) {
+			this.rule = rule;
+			this.dist = dist;
+		}
+		
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			for (int dx = -dist; dx < dist + 1; dx++) { for (int dy = -dist; dy < dist + 1; dy++) { for (int dz = -dist; dz < dist + 1; dz++) {
+				rule.apply(x + dx, y + dy, z + dz, map, r, ac);
+			}}}
+			
+			return true;
+		}
+	}
+	
+	public static Outcome applyNearby(int dist, Rule r) { return new ApplyNearby(r, dist); }
 }

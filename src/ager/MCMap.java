@@ -80,6 +80,24 @@ public class MCMap {
 		return files.get(fp).getChunk(chunkRem(chunkX), chunkRem(chunkZ));
 	}
 	
+	public boolean getPartOfBlob(int x, int y, int z) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return false; }
+		return files.get(fp).getPartOfBlob(rem(x), y, rem(z));
+	}
+	
+	public void setPartOfBlob(int x, int y, int z, boolean value) {
+		Point fp = fileP(x, y, z);
+		if (!files.containsKey(fp)) { return; }
+		files.get(fp).setPartOfBlob(rem(x), y, rem(z), value);
+	}
+	
+	public void clearPartOfBlob() {
+		for (MCAFile f : files.values()) {
+			f.clearPartOfBlob();
+		}
+	}
+	
 	public int getBlockType(int x, int y, int z) {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return -1; }

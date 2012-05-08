@@ -19,9 +19,10 @@ public class Ager {
 		for (int lp = 0; lp < loops; lp++) {
 			if (lp % 3 == 2) {
 				m.calcSupport(true);
-			}/* else {
-				continue; // qqDPS
-			}*/
+			} else {
+				m.clearPartOfBlob();
+				//continue; // qqDPS
+			}
 			
 			int fi = 0;
 			Rule.ApplicationCache ac = new Rule.ApplicationCache();

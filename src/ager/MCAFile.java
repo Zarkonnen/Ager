@@ -78,6 +78,28 @@ public class MCAFile {
 		return true;
 	}
 	
+	public boolean getPartOfBlob(int x, int y, int z) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return false; }
+		return chunks[chunkZ][chunkX].getPartOfBlob(x % 16, y, z % 16);
+	}
+	
+	public void setPartOfBlob(int x, int y, int z, boolean value) {
+		int chunkX = x / 16;
+		int chunkZ = z / 16;
+		if (chunks[chunkZ][chunkX] == null) { return; }
+		chunks[chunkZ][chunkX].setPartOfBlob(x % 16, y, z % 16, value);
+	}
+	
+	public void clearPartOfBlob() {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].clearPartOfBlob();
+			}
+		}}
+	}
+	
 	public int getBlockType(int x, int y, int z) {
 		int chunkX = x / 16;
 		int chunkZ = z / 16;

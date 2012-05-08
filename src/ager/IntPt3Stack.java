@@ -1,12 +1,12 @@
 package ager;
 
-public final class Pt3Stack {
-	byte[] data;
+public final class IntPt3Stack {
+	int[] data;
 	int headPtr = -3;
 	public int x, y, z;
 
-	public Pt3Stack(int capacity) {
-		data = new byte[3 * capacity];
+	public IntPt3Stack(final int capacity) {
+		data = new int[3 * capacity];
 	}
 	
 	public int size() { return headPtr / 3 + 1; }
@@ -16,13 +16,13 @@ public final class Pt3Stack {
 	public void push(int x, int y, int z) {
 		headPtr += 3;
 		if (headPtr == data.length) {
-			byte[] newData = new byte[data.length * 2];
+			int[] newData = new int[data.length * 2];
 			System.arraycopy(data, 0, newData, 0, data.length);
 			data = newData;
 		}
-		data[headPtr    ] = (byte) x;
-		data[headPtr + 1] = (byte) y;
-		data[headPtr + 2] = (byte) z;
+		data[headPtr    ] = x;
+		data[headPtr + 1] = y;
+		data[headPtr + 2] = z;
 	}
 	public void pop() {
 		x = data[headPtr    ];
@@ -30,13 +30,18 @@ public final class Pt3Stack {
 		z = data[headPtr + 2];
 		headPtr -= 3;
 	}
+	public void get(final int index) {
+		x = data[index * 3    ];
+		y = data[index * 3 + 1];
+		z = data[index * 3 + 2];
+	}
 	public void compact() {
-		byte[] newData = new byte[headPtr + 3];
+		int[] newData = new int[headPtr + 3];
 		System.arraycopy(data, 0, newData, 0, newData.length);
 		data = newData;
 	}
-	public void compactTo(int cap) {
-		byte[] newData = new byte[Math.max(headPtr + 3, cap * 3)];
+	public void compactTo(final int cap) {
+		int[] newData = new int[Math.max(headPtr + 3, cap * 3)];
 		System.arraycopy(data, 0, newData, 0, newData.length);
 		data = newData;
 	}

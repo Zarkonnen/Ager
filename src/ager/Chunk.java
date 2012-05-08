@@ -15,7 +15,9 @@ public class Chunk {
 	BitSet wasSupported = new BitSet(256 * 16 * 16); // yzx
 	BitSet isSupported = new BitSet(256 * 16 * 16); // yzx
 	boolean firstPass = true;
-	final Pt3Stack q = new Pt3Stack(8);
+	final BytePt3Stack q = new BytePt3Stack(8);
+	
+	BitSet partOfBlob = new BitSet(256 * 16 * 16);
 	
 	public void initSupport(boolean postRun) {
 		firstPass = true;
@@ -137,8 +139,20 @@ public class Chunk {
 		}
 	}
 	
+	public boolean getPartOfBlob(int x, int y, int z) {
+		return partOfBlob.get(y * 256 + z * 16 + x);
+	}
+	
+	public void setPartOfBlob(int x, int y, int z, boolean value) {
+		partOfBlob.set(y * 256 + z * 16 + x, value);
+	}
+	
+	public void clearPartOfBlob() {
+		partOfBlob.clear();
+	}
+	
 	public boolean getSupported(int x, int y, int z, boolean postRun) {
-		return (postRun ? isSupported : wasSupported).get(y * 256 + z * 16 + x); 
+		return (postRun ? isSupported : wasSupported).get(y * 256 + z * 16 + x);
 	}
 	
 	public void setSupported(boolean supported, int x, int y, int z, boolean postRun) {

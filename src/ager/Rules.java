@@ -292,6 +292,14 @@ public class Rules {
 		rule().desc("Stone brick stairs weathering.").
 				p(0.01).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		
+		// Trees and non-trees.
+		rule().desc("Trees rarely disappearing en bloc.").
+				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).
+				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
+				then(applyNearby(4, new Rule().p(0.02).when(is(Air)).when(above(Grass)).then(become(Sapling))));
+		rule().desc("Non-trees disappearing individually.").
+				p(1.0).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobDoesNotContain(Leaves)).then(applyIndividually(new Rule().p(0.04).moreLikelyWhen(below(0.07, Air)).moreLikelyWhen(skyExposed(0.07)).then(become(Air))));
+		
 		// Sliding and falling.
 		rule().desc("Gravel heaping.").
 				p(1.0).when(is(Gravel)).when(below(Air)).then(slideDown(1)).recurseDownwardsOnSuccess();
@@ -386,31 +394,47 @@ public class Rules {
 				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_West_Wall_Open)).when(noSupportFrom(1, 0, 0)).then(become(Air));
 		
 		for (Rule r : rules) {
-			int type = -1;
+			ArrayList<Integer> typesL = new ArrayList<Integer>();
 			for (Condition cond : r.conditions) {
 				if (cond.check() instanceof Is) {
 					ruleTypes[((Is) cond.check()).type + 1] = true;
-					type = ((Is) cond.check()).type;
+					typesL.add(((Is) cond.check()).type);
+				}
+				if (cond.check() instanceof IsConnectedBlobOf) {
+					for (int t : ((IsConnectedBlobOf) cond.check()).types) {
+						ruleTypes[t + 1] = true;
+						typesL.add(t);
+					}
 				}
 			}
-			if (rulesForType[type + 1] == null) {
-				rulesForType[type + 1] = new ArrayList<Rule>();
+			for (int type : typesL) {
+				if (rulesForType[type + 1] == null) {
+					rulesForType[type + 1] = new ArrayList<Rule>();
+				}
+				rulesForType[type + 1].add(r);
 			}
-			rulesForType[type + 1].add(r);
 		}
 		
 		for (Rule r : secondRules) {
-			int type = -1;
+			ArrayList<Integer> typesL = new ArrayList<Integer>();
 			for (Condition cond : r.conditions) {
 				if (cond.check() instanceof Is) {
 					secondRuleTypes[((Is) cond.check()).type + 1] = true;
-					type = ((Is) cond.check()).type;
+					typesL.add(((Is) cond.check()).type);
+				}
+				if (cond.check() instanceof IsConnectedBlobOf) {
+					for (int t : ((IsConnectedBlobOf) cond.check()).types) {
+						secondRuleTypes[t + 1] = true;
+						typesL.add(t);
+					}
 				}
 			}
-			if (secondRulesForType[type + 1] == null) {
-				secondRulesForType[type + 1] = new ArrayList<Rule>();
+			for (int type : typesL) {
+				if (secondRulesForType[type + 1] == null) {
+					secondRulesForType[type + 1] = new ArrayList<Rule>();
+				}
+				secondRulesForType[type + 1].add(r);
 			}
-			secondRulesForType[type + 1].add(r);
 		}
 	}
 }
