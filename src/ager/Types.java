@@ -113,6 +113,10 @@ public class Types {
 	public static final int Sign_Post = 63;
 	public static final int Wooden_Door_Block = 64;
 	public static final int Ladder = 65;
+		public static final int Ladder_Facing_North = 2;
+		public static final int Ladder_Facing_South = 3;
+		public static final int Ladder_Facing_West = 4;
+		public static final int Ladder_Facing_East = 5;
 	public static final int Rails = 66;
 	public static final int Cobblestone_Stairs = 67;
 	public static final int Wall_Sign = 68;
@@ -163,6 +167,14 @@ public class Types {
 	public static final int Redstone_Repeater_Block_on = 94;
 	public static final int Locked_Chest = 95;
 	public static final int Trapdoor = 96;
+		public static final int Trapdoor_Attached_To_South_Wall_Closed = 0;
+		public static final int Trapdoor_Attached_To_North_Wall_Closed = 1;
+		public static final int Trapdoor_Attached_To_East_Wall_Closed = 2;
+		public static final int Trapdoor_Attached_To_West_Wall_Closed = 3;
+		public static final int Trapdoor_Attached_To_South_Wall_Open = 0 + 4;
+		public static final int Trapdoor_Attached_To_North_Wall_Open = 1 + 4;
+		public static final int Trapdoor_Attached_To_East_Wall_Open = 2 + 4;
+		public static final int Trapdoor_Attached_To_West_Wall_Open = 3 + 4;
 	public static final int Stone_Silverfish = 97;
 	public static final int Cobblestone_Silverfish = 97;
 	public static final int Stone_Brick_Silverfish = 97;

@@ -15,9 +15,9 @@ public class Ager {
 		
 		m.calcSupport(false); //qqDPS EXTREME GRAVITYS
 		
-		int loops = args.length > 1 ? Integer.parseInt(args[1]) * 2 : 2;
+		int loops = args.length > 1 ? Integer.parseInt(args[1]) * 3 : 3;
 		for (int lp = 0; lp < loops; lp++) {
-			if (lp % 2 == 1) {
+			if (lp % 3 == 2) {
 				m.calcSupport(true);
 			}/* else {
 				continue; // qqDPS
@@ -40,12 +40,19 @@ public class Ager {
 								ac.knownX = x;
 								ac.knownY = y;
 								ac.knownZ = z;
-								if (lp % 2 == 0) {
+								if (lp % 3 == 0) {
 									if (!Rules.ruleTypes[ac.type + 1]) { continue; }
 									for (Rule rule : Rules.rulesForType[ac.type + 1]) {
 										if (rule.apply(x, y, z, m, r, ac)) { break; }
 									}
-								} else {
+								}
+								if (lp % 3 == 1) {
+									if (!Rules.secondRuleTypes[ac.type + 1]) { continue; }
+									for (Rule rule : Rules.secondRulesForType[ac.type + 1]) {
+										if (rule.apply(x, y, z, m, r, ac)) { break; }
+									}
+								}
+								if (lp % 3 == 2) {
 									if (ac.type > Types.Air &&
 										!f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx) &&
 										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))

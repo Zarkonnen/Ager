@@ -5,15 +5,26 @@ import static ager.Rule.*;
 import static ager.Types.*;
 
 public class Rules {
-	public static final ArrayList<Rule> rules = new ArrayList<Rule>();
 	static Rule rule() {
 		Rule r = new Rule();
 		rules.add(r);
 		return r;
 	}
 	
+	public static final ArrayList<Rule> rules = new ArrayList<Rule>();
 	public static boolean[] ruleTypes = new boolean[1024];
 	public static final ArrayList<Rule>[] rulesForType = new ArrayList[1024];
+	
+	static Rule secondRule() {
+		Rule r = new Rule();
+		secondRules.add(r);
+		return r;
+	}
+	
+	public static final ArrayList<Rule> secondRules = new ArrayList<Rule>();
+	public static boolean[] secondRuleTypes = new boolean[1024];
+	public static final ArrayList<Rule>[] secondRulesForType = new ArrayList[1024];
+	
 	public static int[] fallChanges = new int[1024];
 	public final static boolean[] providesSupport = new boolean[1024];
 	public final static boolean[] needsSupportFromBelow = new boolean[1024];
@@ -214,10 +225,8 @@ public class Rules {
 				p(0.001).when(is(Cauldron)).then(become(Air));
 		rule().desc("Cake vanishing.").
 				p(0.9).when(is(Cake_Block)).then(become(Air));
-		rule().desc("Torch vanishing.").
-				p(0.65).when(is(Torch)).then(become(Air));
-		rule().desc("Wool vanishing.").
-				p(0.1).when(is(Wool)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.1, Air)).then(become(Air));
+		rule().desc("Wool vanishing."). // qqDPS
+				p(1.1).when(is(Wool)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.1, Air)).then(become(Air));
 		rule().desc("Wheat vanishing.").
 				p(0.4).when(is(Wheat_Crops)).then(become(Air));
 		rule().desc("Torch vanishing.").
@@ -295,6 +304,87 @@ public class Rules {
 		rule().desc("Bricks falling.").
 				p(0.01).when(is(Brick)).when(below(Air)).then(become(Gravel)).then(slideDown(1));
 		
+		// Detaching
+		secondRule().desc("North torches despawning.").
+				p(1.0).when(is(Torch)).when(hasData(Torch_Pointing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South torches despawning.").
+				p(1.0).when(is(Torch)).when(hasData(Torch_Pointing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East torches despawning.").
+				p(1.0).when(is(Torch)).when(hasData(Torch_Pointing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West torches despawning.").
+				p(1.0).when(is(Torch)).when(hasData(Torch_Pointing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North torches despawning.").
+				p(1.0).when(is(Redstone_Torch_on)).when(hasData(Redstone_Torch_Pointing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South torches despawning.").
+				p(1.0).when(is(Redstone_Torch_on)).when(hasData(Redstone_Torch_Pointing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East torches despawning.").
+				p(1.0).when(is(Redstone_Torch_on)).when(hasData(Redstone_Torch_Pointing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West torches despawning.").
+				p(1.0).when(is(Redstone_Torch_on)).when(hasData(Redstone_Torch_Pointing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North torches despawning.").
+				p(1.0).when(is(Redstone_Torch_off)).when(hasData(Redstone_Torch_Pointing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South torches despawning.").
+				p(1.0).when(is(Redstone_Torch_off)).when(hasData(Redstone_Torch_Pointing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East torches despawning.").
+				p(1.0).when(is(Redstone_Torch_off)).when(hasData(Redstone_Torch_Pointing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West torches despawning.").
+				p(1.0).when(is(Redstone_Torch_off)).when(hasData(Redstone_Torch_Pointing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North wall signs despawning.").
+				p(1.0).when(is(Wall_Sign)).when(hasData(Wall_Sign_Facing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South wall signs despawning.").
+				p(1.0).when(is(Wall_Sign)).when(hasData(Wall_Sign_Facing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East wall signs despawning.").
+				p(1.0).when(is(Wall_Sign)).when(hasData(Wall_Sign_Facing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West wall signs despawning.").
+				p(1.0).when(is(Wall_Sign)).when(hasData(Wall_Sign_Facing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West levers despawning.").
+				p(1.0).when(is(Lever)).when(hasData(Lever_Facing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North buttons despawning.").
+				p(1.0).when(is(Stone_Button)).when(hasData(Stone_Button_Facing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South buttons despawning.").
+				p(1.0).when(is(Stone_Button)).when(hasData(Stone_Button_Facing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East buttons despawning.").
+				p(1.0).when(is(Stone_Button)).when(hasData(Stone_Button_Facing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West buttons despawning.").
+				p(1.0).when(is(Stone_Button)).when(hasData(Stone_Button_Facing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North ladders despawning.").
+				p(1.0).when(is(Ladder)).when(hasData(Ladder_Facing_North)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South ladders despawning.").
+				p(1.0).when(is(Ladder)).when(hasData(Ladder_Facing_South)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East ladders despawning.").
+				p(1.0).when(is(Ladder)).when(hasData(Ladder_Facing_East)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West ladders despawning.").
+				p(1.0).when(is(Ladder)).when(hasData(Ladder_Facing_West)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
+		secondRule().desc("North trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_South_Wall_Closed)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_North_Wall_Closed)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_East_Wall_Closed)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_West_Wall_Closed)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		secondRule().desc("North trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_South_Wall_Open)).when(noSupportFrom(0, 0, 1)).then(become(Air));
+		secondRule().desc("South trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_North_Wall_Open)).when(noSupportFrom(0, 0, -1)).then(become(Air));
+		secondRule().desc("East trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_East_Wall_Open)).when(noSupportFrom(-1, 0, 0)).then(become(Air));
+		secondRule().desc("West trapdoors despawning.").
+				p(1.0).when(is(Trapdoor)).when(hasData(Trapdoor_Attached_To_West_Wall_Open)).when(noSupportFrom(1, 0, 0)).then(become(Air));
+		
 		for (Rule r : rules) {
 			int type = -1;
 			for (Condition cond : r.conditions) {
@@ -307,6 +397,20 @@ public class Rules {
 				rulesForType[type + 1] = new ArrayList<Rule>();
 			}
 			rulesForType[type + 1].add(r);
+		}
+		
+		for (Rule r : secondRules) {
+			int type = -1;
+			for (Condition cond : r.conditions) {
+				if (cond.check() instanceof Is) {
+					secondRuleTypes[((Is) cond.check()).type + 1] = true;
+					type = ((Is) cond.check()).type;
+				}
+			}
+			if (secondRulesForType[type + 1] == null) {
+				secondRulesForType[type + 1] = new ArrayList<Rule>();
+			}
+			secondRulesForType[type + 1].add(r);
 		}
 	}
 }

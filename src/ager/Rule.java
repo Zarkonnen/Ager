@@ -260,6 +260,23 @@ public class Rule {
 	
 	public static ProbabilityModifier inVicinityOf(double p, int dist, int type) { return new ProbabilityModifier(new Vicinity(type, dist), p); }
 	
+	public static class SupportFrom implements Check {
+		int dx, dy, dz;
+
+		public SupportFrom(int dx, int dy, int dz) {
+			this.dx = dx;
+			this.dy = dy;
+			this.dz = dz;
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			return Rules.providesSupport[map.getBlockType(x + dx, y + dy, z + dz) + 1] ? 1 : 0;
+		}
+	}
+	
+	public static Condition noSupportFrom(int dx, int dy, int dz) { return new MaximumCondition(new SupportFrom(dx, dy, dz), 0); }
+	
 	public static class Become implements Outcome {
 		final int type;
 
