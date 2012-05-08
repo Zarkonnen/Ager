@@ -138,7 +138,7 @@ public class Rules {
 		rule().desc("Mossy cobble weathering.").
 				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Grass growth.").
-				p(1).when(is(Dirt)).when(skyExposed()).when(nextTo(Grass)).then(become(Grass));
+				p(1).when(is(Dirt)).when(nextTo(Grass)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
 				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.003, Air)).then(become(Air));
 		rule().desc("Gravel turning into soil.").
@@ -299,6 +299,16 @@ public class Rules {
 				then(applyNearby(4, new Rule().p(0.02).when(is(Air)).when(above(Grass)).then(become(Sapling))));
 		rule().desc("Non-trees disappearing individually.").
 				p(1.0).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobDoesNotContain(Leaves)).then(applyIndividually(new Rule().p(0.04).moreLikelyWhen(below(0.07, Air)).moreLikelyWhen(skyExposed(0.07)).then(become(Air))));
+		
+		// Doors
+		rule().desc("Wooden doors disappear pretty quickly.").
+				p(0.3).when(isConnectedBlobOf(Wooden_Door_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		rule().desc("Metal doors disappear very rarely.").
+				p(0.01).when(isConnectedBlobOf(Wooden_Door_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		
+		// Beds
+		rule().desc("Beds disappear pretty quickly.").
+				p(0.3).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Sliding and falling.
 		rule().desc("Gravel heaping.").
