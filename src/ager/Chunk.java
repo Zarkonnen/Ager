@@ -134,6 +134,7 @@ public class Chunk {
 		for (int y = 0; y < 16; y++) {
 			if (sections[y] != null) {
 				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("BlockLight").getValue(), 0, 2048);
+				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("SkyLight").getValue(), 0, 2048);
 			}
 		}
 	}
@@ -253,6 +254,21 @@ public class Chunk {
 		int addr = ((remY * 16 + z) * 16 + x);
 		byte b = ((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2];
 		((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
+	}
+	
+	public void calculateSkyLights(IntPt4Stack q, int blockX, int blockZ) {
+		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+			int y = 255;
+			int l = 15;
+			int type = getBlockType(x, y, z);
+			while (Rules.transparent[type + 1]) {
+				setSkyLight((byte) l, x, y, z);
+				q.push(x + blockX, y, z + blockZ, l - 1);
+				y--;
+				if (y < 0) { return; }
+				type = getBlockType(x, y, z);
+			}
+		}}
 	}
 	
 	public void clearTileEntity(int x, int y, int z, int globX, int globY, int globZ) {

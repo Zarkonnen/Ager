@@ -39,12 +39,6 @@ public class MCMap {
 		}
 	}
 	
-	public void removeLighting() {
-		for (MCAFile f : files.values()) {
-			f.removeLighting();
-		}
-	}
-	
 	public void writeAndClose() throws IOException {
 		for (MCAFile f : files.values()) {
 			f.writeAndClose();
@@ -200,5 +194,62 @@ public class MCMap {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return; }
 		files.get(fp).setTileEntity(te, rem(x), y, rem(z), x, y, z);
+	}
+	
+	public void removeLighting() {
+		for (MCAFile f : files.values()) {
+			f.removeLighting();
+		}
+	}
+	
+	static final int[] NS_X = {-1, 1, 0, 0, 0, 0 };
+	static final int[] NS_Y = { 0, 0,-1, 1, 0, 0 };
+	static final int[] NS_Z = { 0, 0, 0, 0,-1, 1 };
+	
+	public void floodBlockLight(int x, int y, int z, IntPt4Stack q) {
+		int type = getBlockType(x, y, z);
+		int l = Rules.lightFrom[type + 1];
+		if (l <= 0) { return; }
+		//System.out.println("Flooding!");
+		setBlockLight((byte) l, x, y, z);
+		q.push(x, y, z, l - 1);
+		while (!q.isEmpty()) {
+			q.pop();
+			for (int j = 0; j < 6; j++) {
+				int nx = q.x + NS_X[j];
+				int ny = q.y + NS_Y[j];
+				int nz = q.z + NS_Z[j];
+				int localType = getBlockType(nx, ny, nz);
+				if (!Rules.transparent[localType + 1]) { /*System.out.println("solid " + localType);*/ continue; }
+				int localL = getBlockLight(nx, ny, nz);
+				if (localL == -1) { /*System.out.println("light is -1");*/ continue; } // There is no block there.
+				if (localL >= q.l) { /*System.out.println("already brighter");*/ continue; } // It's already as bright or brighter than we can make it.
+				//System.out.println("lighting up to " + q.l);
+				setBlockLight((byte) q.l, nx, ny, nz);
+				if (q.l > 1) {
+					q.push(nx, ny, nz, q.l - 1);
+				}
+			}
+		}
+	}
+	
+	public void floodSkyLight(IntPt4Stack q) {
+		while (!q.isEmpty()) {
+			q.pop();
+			for (int j = 0; j < 6; j++) {
+				int nx = q.x + NS_X[j];
+				int ny = q.y + NS_Y[j];
+				int nz = q.z + NS_Z[j];
+				int localType = getBlockType(nx, ny, nz);
+				if (!Rules.transparent[localType + 1]) { continue; }
+				int localL = getSkyLight(nx, ny, nz);
+				if (localL == -1) { continue; } // There is no block there.
+				if (localL >= q.l) { continue; } // It's already as bright or brighter than we can make it.
+				setSkyLight((byte) q.l, nx, ny, nz);
+				if (q.l > 1) {
+					q.push(nx, ny, nz, q.l - 1);
+				}
+			}
+		}
 	}
 }

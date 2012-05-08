@@ -1,12 +1,10 @@
 package ager;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import static ager.Rule.*;
 import static ager.Types.*;
 import static ager.Blueprints.*;
 import java.util.Random;
-import javax.swing.text.DefaultEditorKit.BeepAction;
 import unknown.Tag;
 
 public class Rules {
@@ -36,6 +34,17 @@ public class Rules {
 	public final static boolean[] needsSupportFromFaces = new boolean[1024];
 	public final static boolean[] fallThru = new boolean[1024];
 	public static final boolean[] checkTileEntity = new boolean[1024];
+	
+	public static final int[] lightFrom = new int[1024];
+	public static final boolean[] transparent = new boolean[1024];
+	
+	static void castsLight(int type, int amt) {
+		lightFrom[type + 1] = amt;
+	}
+	
+	static void isTransparent(int type) {
+		transparent[type + 1] = true;
+	}
 	
 	public static final ArrayList<StoredItemRule> storedItemRules = new ArrayList<StoredItemRule>();
 	
@@ -78,6 +87,81 @@ public class Rules {
 	}
 	
 	static {
+		castsLight(Fire, 15);
+		castsLight(Jack_O_Lantern, 15);
+		castsLight(Lava, 15);
+		castsLight(Stationary_Lava, 15);
+		castsLight(Glowstone, 15);
+		castsLight(Redstone_Lamp_on, 15);
+		castsLight(Torch, 14);
+		castsLight(Burning_Furnace, 13);
+		castsLight(Portal, 11);
+		castsLight(Redstone_Repeater_Block_on, 9);
+		castsLight(Redstone_Torch_on, 7);
+		castsLight(Brown_Mushroom, 1);
+		castsLight(Brewing_Stand, 1);
+		// qqDPS Dragon Egg, End Portal Block, Locked Chest
+		
+		isTransparent(-1);
+		isTransparent(Ice);
+		isTransparent(Glass);
+		isTransparent(TNT);
+		isTransparent(Monster_Spawner);
+		isTransparent(Leaves);
+		isTransparent(Piston);
+		isTransparent(Glowstone);
+		isTransparent(Chest);
+		isTransparent(Farmland);
+		isTransparent(Stone_Slab);
+		isTransparent(Wooden_Slab);
+		isTransparent(Cobblestone_Stairs);
+		isTransparent(Brick_Stairs);
+		isTransparent(Stone_Brick_Stairs);
+		isTransparent(Wooden_Stairs);
+		isTransparent(Nether_Brick_Stairs);
+		isTransparent(Ladder);
+		isTransparent(Fence);
+		isTransparent(Fence_Gate);
+		isTransparent(Cake_Block);
+		isTransparent(Bed_Block);
+		isTransparent(Wooden_Door_Block);
+		isTransparent(Iron_Door_Block);
+		isTransparent(Redstone_Repeater_Block_on);
+		isTransparent(Redstone_Repeater_Block_off);
+		isTransparent(Trapdoor);
+		isTransparent(Rails);
+		isTransparent(Detector_Rail);
+		isTransparent(Powered_Rail);
+		isTransparent(Lever);
+		isTransparent(Wooden_Pressure_Plate);
+		isTransparent(Stone_Pressure_Plate);
+		isTransparent(Nether_Brick_Fence);
+		isTransparent(Iron_Bars);
+		isTransparent(Stone_Button);
+		isTransparent(Vines);
+		isTransparent(Redstone_Wire);
+		isTransparent(Redstone_Torch_off);
+		isTransparent(Redstone_Repeater_Block_on);
+		isTransparent(Air);
+		isTransparent(Snow_Block);
+		isTransparent(Torch);
+		isTransparent(Sign_Post);
+		isTransparent(Wall_Sign);
+		isTransparent(Fire);
+		isTransparent(Portal);
+		isTransparent(Cactus);
+		isTransparent(Sugar_Cane);
+		isTransparent(Wheat_Crops);
+		isTransparent(Rose);
+		isTransparent(Dandelion);
+		isTransparent(Red_Mushroom);
+		isTransparent(Brown_Mushroom);
+		isTransparent(Sapling);
+		isTransparent(Tall_Grass);
+		isTransparent(Dead_Bush);
+		isTransparent(Water);
+		isTransparent(Lava);
+		
 		itemVanishes(Dandelion, 0.4);
 		itemVanishes(Rose, 0.4);
 		itemVanishes(Wool, 0.2);
