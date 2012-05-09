@@ -77,6 +77,9 @@ public class Ager {
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
 									}
+									if (Rules.flows[ac.type + 1]) {
+										m.doFlow(x, y, z);
+									}
 									/*if (ac.type > Types.Air &&
 										f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx)
 									)

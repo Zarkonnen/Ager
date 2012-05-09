@@ -38,6 +38,12 @@ public class Rules {
 	public static final int[] lightFrom = new int[1024];
 	public static final boolean[] transparent = new boolean[1024];
 	
+	public static final boolean[] flows = new boolean[1024];
+	
+	static void flows(int type) {
+		flows[type + 1] = true;
+	}
+	
 	static void castsLight(int type, int amt) {
 		lightFrom[type + 1] = amt;
 	}
@@ -87,10 +93,15 @@ public class Rules {
 	}
 	
 	static {
+		flows[Moving_Lava] = true;
+		flows[Source_Lava] = true;
+		flows[Moving_Water] = true;
+		flows[Source_Water] = true;
+		
 		castsLight(Fire, 15);
 		castsLight(Jack_O_Lantern, 15);
-		castsLight(Lava, 15);
-		castsLight(Stationary_Lava, 15);
+		castsLight(Moving_Lava, 15);
+		castsLight(Source_Lava, 15);
 		castsLight(Glowstone, 15);
 		castsLight(Redstone_Lamp_on, 15);
 		castsLight(Torch, 14);
@@ -159,8 +170,8 @@ public class Rules {
 		isTransparent(Sapling);
 		isTransparent(Tall_Grass);
 		isTransparent(Dead_Bush);
-		isTransparent(Water);
-		isTransparent(Lava);
+		isTransparent(Moving_Water);
+		isTransparent(Moving_Lava);
 		
 		itemVanishes(Dandelion, 0.4);
 		itemVanishes(Rose, 0.4);
@@ -314,15 +325,15 @@ public class Rules {
 		requiresDirectSupport(Iron_Bars);
 		
 		itemsFallThrough(Air);
-		itemsFallThrough(Water);
-		itemsFallThrough(Stationary_Water);
-		itemsFallThrough(Lava);
-		itemsFallThrough(Stationary_Lava);
+		itemsFallThrough(Moving_Water);
+		itemsFallThrough(Source_Water);
+		itemsFallThrough(Moving_Lava);
+		itemsFallThrough(Source_Lava);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.25, 3, Water)).moreLikelyWhen(touching(0.15, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.25, 3, Moving_Water)).moreLikelyWhen(touching(0.15, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
 				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").

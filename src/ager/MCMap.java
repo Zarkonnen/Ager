@@ -270,4 +270,83 @@ public class MCMap {
 			return;
 		}
 	}
+	
+	public void doFlow(int x, int y, int z) {
+		IntPt3Stack flowQ = new IntPt3Stack(10);
+		int startType = getBlockType(x, y, z);
+		boolean isLava = startType == Types.Moving_Lava || startType == Types.Source_Lava;
+		flowQ.push(x, y, z);
+		while (!flowQ.isEmpty()) {
+			flowQ.pop();
+			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
+			if (belowType == Types.Air) {
+				setBlockType((byte) (isLava ? Types.Moving_Lava : Types.Moving_Water), flowQ.x, flowQ.y - 1, flowQ.z);
+				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
+				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
+			} else {
+				int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
+				int startAmt =
+					type == Types.Source_Lava ? 0 : type == Types.Source_Water ? 0 :
+					getData(flowQ.x, flowQ.y, flowQ.z);
+				if (startAmt == 8) { startAmt = 0; }
+				for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
+					if (dz == 0 && dx == 0) { continue; }
+					if (dz != 0 && dx != 0) { continue; }
+					int nx = flowQ.x + dx;
+					int ny = flowQ.y;
+					int nz = flowQ.z + dz;
+					int t = getBlockType(nx, ny, nz);
+					int amt = startAmt + (isLava ? 2 : 1);
+					if (t == Types.Source_Lava) {
+						if (type == Types.Source_Lava || type == Types.Moving_Lava) {
+							continue;
+						}
+						if (type == Types.Source_Water || type == Types.Moving_Water) {
+							setBlockType((byte) Types.Obsidian, nx, ny, nz);
+							continue;
+						}
+					}
+					if (t == Types.Moving_Lava) {
+						int myAmt = getData(nx, ny, nz);
+						if (type == Types.Moving_Lava && amt >= myAmt) {
+							continue;
+						}
+						if (type == Types.Source_Water || type == Types.Moving_Water) {
+							setBlockType((byte) Types.Cobblestone, nx, ny, nz);
+							continue;
+						}
+					}
+					if (t == Types.Source_Water) {
+						if (type == Types.Source_Water || type == Types.Moving_Water) {
+							continue;
+						}
+						if (type == Types.Source_Lava) {
+							setBlockType((byte) Types.Obsidian, nx, ny, nz);
+							continue;
+						}
+						if (type == Types.Moving_Lava) {
+							setBlockType((byte) Types.Cobblestone, nx, ny, nz);
+							continue;
+						}
+					}
+					if (t == Types.Moving_Water) {
+						int myAmt = getData(nx, ny, nz);
+						if (type == Types.Moving_Water && amt >= myAmt) {
+							continue;
+						}
+						if (type == Types.Source_Lava || type == Types.Moving_Lava) {
+							setBlockType((byte) Types.Cobblestone, nx, ny, nz);
+							continue;
+						}
+					}
+					if (amt < 8 && (t == Types.Air || t == Types.Moving_Water || t == Types.Moving_Lava)) {
+						setBlockType((byte) (isLava ? Types.Moving_Lava : Types.Moving_Water), nx, ny, nz);
+						setData((byte) amt, nx, ny, nz);
+						//System.out.println("setting " + amt);
+						flowQ.push(nx, ny, nz);
+					}
+				}}
+			}
+		}
+	}
 }
