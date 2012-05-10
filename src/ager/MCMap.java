@@ -259,26 +259,6 @@ public class MCMap {
 		}
 	}
 	
-	public void floodSkyLight(IntPt4Stack q) {
-		while (!q.isEmpty()) {
-			q.pop();
-			for (int j = 0; j < 6; j++) {
-				int nx = q.x + NS_X[j];
-				int ny = q.y + NS_Y[j];
-				int nz = q.z + NS_Z[j];
-				int localType = getBlockType(nx, ny, nz);
-				if (!Rules.transparent[localType + 1]) { continue; }
-				int localL = getSkyLight(nx, ny, nz);
-				if (localL == -1) { continue; } // There is no block there.
-				if (localL >= q.l) { continue; } // It's already as bright or brighter than we can make it.
-				setSkyLight((byte) q.l, nx, ny, nz);
-				if (q.l > 1) {
-					q.push(nx, ny, nz, q.l - 1);
-				}
-			}
-		}
-	}
-	
 	public void calcSkyLight() {
 		for (MCAFile f : files.values()) {
 			f.calculateInitialSkyLights();
@@ -310,7 +290,7 @@ public class MCMap {
 			flowQ.pop();
 			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
 			int level = getData(flowQ.x, flowQ.y, flowQ.z);
-			System.out.println("type " + type + " level " + level + " x " + flowQ.x + " y " + flowQ.y + " z " + flowQ.z);
+			//System.out.println("type " + type + " level " + level + " x " + flowQ.x + " y " + flowQ.y + " z " + flowQ.z);
 			boolean isSource = level == 0;
 			
 			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);

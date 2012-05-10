@@ -20,6 +20,7 @@ public class Chunk {
 	BitSet partOfBlob = new BitSet(256 * 16 * 16);
 	
 	final BytePt4Stack lightQ = new BytePt4Stack(8);
+	boolean lightFirstPass = true;
 	byte[][] sectionSkyLights = new byte[16][0];
 	
 	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
@@ -262,21 +263,6 @@ public class Chunk {
 		((byte[]) sections[section].findTagByName("BlockLight").getValue())[addr / 2] = setNybble(b, addr % 2, light);
 	}
 	
-	public void calculateInitialSkyLights(IntPt4Stack q, int blockX, int blockZ) {
-		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
-			int y = 255;
-			int l = 15;
-			int type = getBlockType(x, y, z);
-			while (Rules.transparent[type + 1]) {
-				setSkyLight((byte) l, x, y, z);
-				q.push(x + blockX, y, z + blockZ, l - 1);
-				y--;
-				if (y < 0) { return; }
-				type = getBlockType(x, y, z);
-			}
-		}}
-	}
-	
 	public void calculateInitialSkyLights() {
 		for (int z = 0; z < 16; z++) { lp: for (int x = 0; x < 16; x++) {
 			int y = 255;
@@ -286,12 +272,13 @@ public class Chunk {
 				l -= Rules.extraLightAttenuation[type + 1];
 				setSkyLight((byte) l, x, y, z);
 				if (l <= 0) { continue lp; }
-				lightQ.push(x, y, z, l);
+				//lightQ.push(x, y, z, l);
 				y--;
 				if (y < 0) { continue lp; }
 				type = getBlockType(x, y, z);
 			}
 		}}
+		lightFirstPass = true;
 	}
 	
 	static final int[] NS_X = {-1, 1, 0, 0, 0, 0 };
@@ -299,6 +286,16 @@ public class Chunk {
 	static final int[] NS_Z = { 0, 0, 0, 0,-1, 1 };
 	
 	public void skyLightFloodFill() {
+		if (lightFirstPass) {
+			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { lp: for (int x = 0; x < 16; x++) {
+				int l = getSkyLight(x, y, z);
+				if (l > 0) {
+					lightQ.push(x, y, z, l);
+				}
+			}}}
+			lightFirstPass = false;
+		}
+		
 		while (!lightQ.isEmpty()) {
 			lightQ.pop();
 			for (int j = 0; j < 6; j++) {

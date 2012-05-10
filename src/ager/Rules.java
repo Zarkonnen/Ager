@@ -126,6 +126,8 @@ public class Rules {
 		isTransparent(-1);
 		isTransparent(Ice);
 		isTransparent(Glass);
+		isTransparent(Glass_Pane);
+		isTransparent(Web);
 		isTransparent(TNT);
 		isTransparent(Monster_Spawner);
 		isTransparent(Leaves);
