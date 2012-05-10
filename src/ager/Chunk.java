@@ -322,8 +322,8 @@ public class Chunk {
 					if (localL == -1) { continue; } // There is no block there.
 					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
 					targetChunk.setSkyLight((byte) lightQ.l, xInOtherChunk, ny, zInOtherChunk);
-					if (lightQ.l > 1) {
-						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, lightQ.l - 1);
+					if (lightQ.l - Rules.extraLightAttenuation[localType + 1] > 1) {
+						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, lightQ.l - 1 - Rules.extraLightAttenuation[localType + 1]);
 					}
 				} else {
 					int localType = getBlockType(nx, ny, nz);
@@ -332,8 +332,8 @@ public class Chunk {
 					if (localL == -1) { continue; } // There is no block there.
 					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
 					setSkyLight((byte) lightQ.l, nx, ny, nz);
-					if (lightQ.l > 1) {
-						lightQ.push(nx, ny, nz, lightQ.l - 1);
+					if (lightQ.l - Rules.extraLightAttenuation[localType + 1] > 1) {
+						lightQ.push(nx, ny, nz, lightQ.l - 1 - Rules.extraLightAttenuation[localType + 1]);
 					}
 				}
 			}
@@ -396,5 +396,9 @@ public class Chunk {
 		}
 		
 		tesN.addTag(te);
+	}
+
+	public void clearAllEntities() {
+		t.findTagByName("Level").findTagByName("Entities").clearList();//setValue(Tag.Type.TAG_Compound);
 	}
 }

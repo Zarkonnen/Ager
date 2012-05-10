@@ -13,6 +13,8 @@ public class Ager {
 		
 		MCMap m = new MCMap(new File(args[0]));
 		
+		//System.out.println(m.levelDat.findTagByName("Time").getValue());
+		
 		m.calcSupport(false); //qqDPS EXTREME GRAVITYS
 		IntPt4Stack lightQ = new IntPt4Stack(2048);
 		
@@ -98,6 +100,8 @@ public class Ager {
 				System.out.println(++fi + "/" + m.files.values().size());
 			}	
 		}
+		
+		m.clearAllEntities();
 				
 		m.writeAndClose();
 	}

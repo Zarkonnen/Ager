@@ -203,6 +203,10 @@ public class Tag {
 
         value = newValue;
     }
+	
+	public void clearList() {
+		value = new Tag[0];
+	}
 
     public Type getListType() {
         return listType;

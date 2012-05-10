@@ -3,6 +3,7 @@ package ager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
+import unknown.Tag;
 
 public class Rule {
 	public static class ApplicationCache {
@@ -154,6 +155,19 @@ public class Rule {
 	}
 	
 	public static Condition hasData(int data) { return new MinimumCondition(new HasData(data), 1); }
+	
+	public static class IsEmpty implements Check {
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			Tag te = map.getTileEntity(x, y, z);
+			if (te == null) { return 1; }
+			Tag items = te.findTagByName("Items");
+			if (items == null) { return 1; }
+			return ((Tag[]) items.getValue()).length == 0 ? 1 : 0;
+		}
+	}
+	
+	public static Condition isEmpty() { return new MinimumCondition(new IsEmpty(), 1); }
 		
 	public static class SkyExposed implements Check {
 		@Override

@@ -40,6 +40,8 @@ public class Rules {
 	
 	public static final boolean[] flows = new boolean[1024];
 	
+	public static final int[] extraLightAttenuation = new int[1024];
+	
 	static void flows(int type) {
 		flows[type + 1] = true;
 	}
@@ -55,11 +57,15 @@ public class Rules {
 	public static final ArrayList<StoredItemRule> storedItemRules = new ArrayList<StoredItemRule>();
 	
 	static void itemVanishes(int type, double p) {
-		storedItemRules.add(new StoredItemRule(type, p, -1));
+		storedItemRules.add(new StoredItemRule(type, p, -1, 0, 0));
 	}
 	
 	static void itemBecomes(int type, double p, int newType) {
-		storedItemRules.add(new StoredItemRule(type, p, newType));
+		storedItemRules.add(new StoredItemRule(type, p, newType, 0, 0));
+	}
+	
+	static void itemTakesDamage(int type, double p, int dmg, int breakDmg) {
+		storedItemRules.add(new StoredItemRule(type, p, -1, dmg, breakDmg));
 	}
 	
 	static {
@@ -93,15 +99,18 @@ public class Rules {
 	}
 	
 	static {
-		flows[Moving_Lava] = true;
-		flows[Source_Lava] = true;
-		flows[Moving_Water] = true;
-		flows[Source_Water] = true;
+		flows(Lava);
+		//flows(Source_Lava);
+		flows(Water);
+		//flows(Source_Water);
+		extraLightAttenuation[Water + 1] = 2;
+		//extraLightAttenuation[Source_Water + 1] = 2;
+		extraLightAttenuation[Ice + 1] = 2;
 		
 		castsLight(Fire, 15);
 		castsLight(Jack_O_Lantern, 15);
-		castsLight(Moving_Lava, 15);
-		castsLight(Source_Lava, 15);
+		castsLight(Lava, 15);
+		//castsLight(Source_Lava, 15);
 		castsLight(Glowstone, 15);
 		castsLight(Redstone_Lamp_on, 15);
 		castsLight(Torch, 14);
@@ -170,8 +179,8 @@ public class Rules {
 		isTransparent(Sapling);
 		isTransparent(Tall_Grass);
 		isTransparent(Dead_Bush);
-		isTransparent(Moving_Water);
-		isTransparent(Moving_Lava);
+		isTransparent(Water);
+		isTransparent(Lava);
 		
 		itemVanishes(Dandelion, 0.4);
 		itemVanishes(Rose, 0.4);
@@ -191,34 +200,35 @@ public class Rules {
 		itemVanishes(Vines, 0.7);
 		itemVanishes(Fence, 0.1);
 		itemVanishes(Fence_Gate, 0.1);
-		itemVanishes(Iron_Axe, 0.05);
-		itemVanishes(Iron_Boots, 0.05);
+		itemTakesDamage(Iron_Axe, 0.2, 20, 251);
+		itemTakesDamage(Iron_Boots, 0.1, 20, 196);
 		itemVanishes(Iron_Door, 0.05);
-		itemVanishes(Iron_Chestplate, 0.05);
-		itemVanishes(Iron_Hoe, 0.05);
-		itemVanishes(Iron_Helmet, 0.05);
-		itemVanishes(Iron_Leggings, 0.05);
-		itemVanishes(Iron_Pickaxe, 0.05);
-		itemVanishes(Iron_Shovel, 0.05);
-		itemVanishes(Iron_Sword, 0.05);
-		itemVanishes(Gold_Axe, 0.05);
-		itemVanishes(Gold_Boots, 0.05);
-		itemVanishes(Gold_Chestplate, 0.05);
-		itemVanishes(Gold_Hoe, 0.05);
-		itemVanishes(Gold_Helmet, 0.05);
-		itemVanishes(Gold_Leggings, 0.05);
-		itemVanishes(Gold_Pickaxe, 0.05);
-		itemVanishes(Gold_Shovel, 0.05);
-		itemVanishes(Gold_Sword, 0.05);
-		itemVanishes(Wooden_Axe, 0.2);
-		itemVanishes(Wooden_Hoe, 0.2);
-		itemVanishes(Wooden_Pickaxe, 0.2);
-		itemVanishes(Wooden_Shovel, 0.2);
-		itemVanishes(Wooden_Sword, 0.2);
-		itemVanishes(Leather_Boots, 0.3);
-		itemVanishes(Leather_Chestplate, 0.3);
-		itemVanishes(Leather_Helmet, 0.3);
-		itemVanishes(Leather_Leggings, 0.3);
+		itemTakesDamage(Iron_Chestplate, 0.1, 20, 529);
+		itemTakesDamage(Iron_Hoe, 0.2, 20, 251);
+		itemTakesDamage(Iron_Helmet, 0.1, 20, 166);
+		itemTakesDamage(Iron_Leggings, 0.1, 20, 226);
+		itemTakesDamage(Iron_Pickaxe, 0.2, 20, 251);
+		itemTakesDamage(Iron_Shovel, 0.2, 20, 251);
+		itemTakesDamage(Iron_Sword, 0.2, 20, 251);
+		itemTakesDamage(Gold_Axe, 0.2, 5, 33);
+		itemTakesDamage(Gold_Hoe, 0.2, 5, 33);
+		itemTakesDamage(Gold_Pickaxe, 0.2, 5, 33);
+		itemTakesDamage(Gold_Shovel, 0.2, 5, 33);
+		itemTakesDamage(Gold_Sword, 0.2, 5, 33);
+		itemVanishes(Diamond_Axe, 0.01);
+		itemVanishes(Diamond_Hoe, 0.01);
+		itemVanishes(Diamond_Pickaxe, 0.01);
+		itemVanishes(Diamond_Shovel, 0.01);
+		itemVanishes(Diamond_Sword, 0.01);
+		itemTakesDamage(Wooden_Axe, 0.3, 20, 60);
+		itemTakesDamage(Wooden_Hoe, 0.3, 20, 60);
+		itemTakesDamage(Wooden_Pickaxe, 0.3, 20, 60);
+		itemTakesDamage(Wooden_Shovel, 0.3, 20, 60);
+		itemTakesDamage(Wooden_Sword, 0.3, 20, 60);
+		itemTakesDamage(Leather_Boots, 0.5, 7, 66);
+		itemTakesDamage(Leather_Chestplate, 0.5, 7, 82);
+		itemTakesDamage(Leather_Helmet, 0.5, 7, 56);
+		itemTakesDamage(Leather_Leggings, 0.5, 7, 76);
 		itemVanishes(Apple, 0.4);
 		itemVanishes(String, 0.4);
 		itemVanishes(Feather, 0.4);
@@ -325,15 +335,15 @@ public class Rules {
 		requiresDirectSupport(Iron_Bars);
 		
 		itemsFallThrough(Air);
-		itemsFallThrough(Moving_Water);
-		itemsFallThrough(Source_Water);
-		itemsFallThrough(Moving_Lava);
-		itemsFallThrough(Source_Lava);
+		itemsFallThrough(Water);
+		//itemsFallThrough(Source_Water);
+		itemsFallThrough(Lava);
+		//itemsFallThrough(Source_Lava);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Moving_Water)).moreLikelyWhen(touching(0.1, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Water)).moreLikelyWhen(touching(0.1, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
 				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").
@@ -424,8 +434,8 @@ public class Rules {
 				p(0.001).when(is(Cauldron)).then(become(Air));
 		rule().desc("Cake vanishing.").
 				p(0.9).when(is(Cake_Block)).then(become(Air));
-		rule().desc("Wool vanishing."). // qqDPS
-				p(1.1).when(is(Wool)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.1, Air)).then(become(Air));
+		rule().desc("Wool vanishing.").
+				p(0.1).when(is(Wool)).moreLikelyWhen(skyExposed(0.15)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.05, Air)).then(become(Air));
 		rule().desc("Wheat vanishing.").
 				p(0.4).when(is(Wheat_Crops)).then(become(Air));
 		rule().desc("Torch vanishing.").
@@ -510,8 +520,10 @@ public class Rules {
 				p(0.3).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Chests
-		rule().desc("Chests disappear very rarely.").
-				p(0.001).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		/*rule().desc("Chests disappear very rarely.").
+				p(0.001).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));*/
+		rule().desc("Chests disappear only when empty.").
+				p(0.05).when(is(Chest)).when(isEmpty()).then(become(Air));
 		
 		// Sliding and falling.
 		rule().desc("Gravel heaping.").

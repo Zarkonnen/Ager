@@ -2,7 +2,9 @@ package ager;
 
 import java.awt.Point;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import unknown.Tag;
@@ -10,9 +12,18 @@ import unknown.Tag;
 public class MCMap {
 	public final HashMap<Point, MCAFile> files = new HashMap<Point, MCAFile>();
 	private final File worldF;
+	//public final Tag levelDat;
 
 	public MCMap(File worldF) throws FileNotFoundException, IOException {
 		this.worldF = worldF;
+		
+		/*FileInputStream fis = null;
+		try {
+			fis = new FileInputStream(new File(worldF, "level.dat"));
+			levelDat = Tag.readFrom(fis);
+		} finally {
+			fis.close();
+		}*/
 		
 		for (File f : new File(worldF, "region").listFiles()) {
 			if (f.getName().endsWith(".mca")) {
@@ -43,6 +54,15 @@ public class MCMap {
 		for (MCAFile f : files.values()) {
 			f.writeAndClose();
 		}
+		
+		/*FileOutputStream fos = null;
+		try {
+			fos = new FileOutputStream(new File(worldF, "level.dat"));
+			levelDat.writeTo(fos);
+		} finally {
+			fos.flush();
+			fos.close();
+		}*/
 	}
 	
 	static int fileC(int c) {
@@ -196,6 +216,12 @@ public class MCMap {
 		files.get(fp).setTileEntity(te, rem(x), y, rem(z), x, y, z);
 	}
 	
+	public void clearAllEntities() {
+		for (MCAFile f : files.values()) {
+			f.clearAllEntities();
+		}
+	}
+	
 	public void removeLighting() {
 		for (MCAFile f : files.values()) {
 			f.removeLighting();
@@ -203,8 +229,8 @@ public class MCMap {
 	}
 	
 	static final int[] NS_X = {-1, 1, 0, 0, 0, 0 };
-	static final int[] NS_Y = { 0, 0,-1, 1, 0, 0 };
-	static final int[] NS_Z = { 0, 0, 0, 0,-1, 1 };
+	static final int[] NS_Y = { 0, 0, 0, 0,-1, 1 };
+	static final int[] NS_Z = { 0, 0,-1, 1, 0, 0 };
 	
 	public void floodBlockLight(int x, int y, int z, IntPt4Stack q) {
 		int type = getBlockType(x, y, z);
@@ -226,8 +252,8 @@ public class MCMap {
 				if (localL >= q.l) { /*System.out.println("already brighter");*/ continue; } // It's already as bright or brighter than we can make it.
 				//System.out.println("lighting up to " + q.l);
 				setBlockLight((byte) q.l, nx, ny, nz);
-				if (q.l > 1) {
-					q.push(nx, ny, nz, q.l - 1);
+				if (q.l - Rules.extraLightAttenuation[localType + 1] > 1) {
+					q.push(nx, ny, nz, q.l - 1 - Rules.extraLightAttenuation[localType + 1]);
 				}
 			}
 		}
@@ -272,30 +298,82 @@ public class MCMap {
 	}
 	
 	public void doFlow(int x, int y, int z) {
+		int startLevel = getData(x, y, z);
+		if (startLevel != 0) {
+			return;
+		}
+		IntPt3Stack flowQ = new IntPt3Stack(10);
+		flowQ.push(x, y, z);
+		while (!flowQ.isEmpty()) {
+			flowQ.pop();
+			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
+			int level = getData(flowQ.x, flowQ.y, flowQ.z);
+			boolean isSource = level == 0;
+			
+			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
+			int belowLevel = getData(flowQ.x, flowQ.y - 1, flowQ.z);
+			boolean hasBottom = belowType != type && belowType != Types.Air;
+			
+			if (!hasBottom) {
+				setBlockType((byte) type, flowQ.x, flowQ.y - 1, flowQ.z);
+				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
+				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
+			}
+			
+			if (hasBottom || isSource) {
+				for (int j = 0; j < 4; j++) {
+					int newLevel = (level == 8 ? 0 : level) + type == Types.Water ? 1 : 2;
+					if (newLevel > 7) { continue; }
+					int nx = flowQ.x + NS_X[j];
+					int ny = flowQ.y;
+					int nz = flowQ.z + NS_Z[j];
+					int nType = getBlockType(nx, ny, nz);
+					if (nType == type && getData(nx, ny, nz) <= newLevel) {
+						continue;
+					}
+					if (nType == type || nType == Types.Air) {
+						setBlockType((byte) type, nx, ny, nz);
+						setData((byte) newLevel, nx, ny, nz);
+						flowQ.push(nx, ny, nz);
+					}
+				}
+			}
+		}
+	}
+	
+	/*public void doFlow2(int x, int y, int z) {
 		IntPt3Stack flowQ = new IntPt3Stack(10);
 		int startType = getBlockType(x, y, z);
-		boolean isLava = startType == Types.Moving_Lava || startType == Types.Source_Lava;
+		if (2 * 2 == 4) { return; }
+		boolean isLava = startType == Types.Lava || startType == Types.Source_Lava;
 		boolean isSource = startType == Types.Source_Lava || startType == Types.Source_Water;
 		flowQ.push(x, y, z);
 		while (!flowQ.isEmpty()) {
 			flowQ.pop();
 			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
+			int amt = getData(flowQ.x, flowQ.y, flowQ.z);
 			if (belowType == Types.Air) {
-				setBlockType((byte) (isLava ? Types.Moving_Lava : Types.Moving_Water), flowQ.x, flowQ.y - 1, flowQ.z);
+				setBlockType((byte) (isLava ? Types.Lava : Types.Water), flowQ.x, flowQ.y - 1, flowQ.z);
 				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
 				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
 				continue;
 			}
-			if (!isSource && !isLava && belowType == Types.Moving_Water) {
+			if (!isSource && !isLava && belowType == Types.Water) {
 				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
 				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
+				if (amt == 8) {
+					continue; // Falling water don't spread!
+				}
 			}
 			if (!isSource && !isLava && belowType == Types.Source_Water) {
 				continue;
 			}
-			if (!isSource && isLava && belowType == Types.Moving_Lava) {
+			if (!isSource && isLava && belowType == Types.Lava) {
 				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
 				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
+				if (amt == 8) {
+					continue; // Falling lava don't spread!
+				}
 			}
 			if (!isSource && isLava && belowType == Types.Source_Lava) {
 				continue;
@@ -303,8 +381,7 @@ public class MCMap {
 
 			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
 			int startAmt =
-				type == Types.Source_Lava ? 0 : type == Types.Source_Water ? 0 :
-				getData(flowQ.x, flowQ.y, flowQ.z);
+				type == Types.Source_Lava ? 0 : type == Types.Source_Water ? 0 : amt;
 			if (startAmt == 8) { startAmt = 0; }
 			for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
 				if (dz == 0 && dx == 0) { continue; }
@@ -313,56 +390,56 @@ public class MCMap {
 				int ny = flowQ.y;
 				int nz = flowQ.z + dz;
 				int t = getBlockType(nx, ny, nz);
-				int amt = startAmt + (isLava ? 2 : 1);
+				int newAmt = startAmt + (isLava ? 2 : 1);
 				if (t == Types.Source_Lava) {
-					if (type == Types.Source_Lava || type == Types.Moving_Lava) {
+					if (type == Types.Source_Lava || type == Types.Lava) {
 						continue;
 					}
-					if (type == Types.Source_Water || type == Types.Moving_Water) {
+					if (type == Types.Source_Water || type == Types.Water) {
 						setBlockType((byte) Types.Obsidian, nx, ny, nz);
 						continue;
 					}
 				}
-				if (t == Types.Moving_Lava) {
+				if (t == Types.Lava) {
 					int myAmt = getData(nx, ny, nz);
-					if (type == Types.Moving_Lava && amt >= myAmt) {
+					if (type == Types.Lava && newAmt >= myAmt) {
 						continue;
 					}
-					if (type == Types.Source_Water || type == Types.Moving_Water) {
+					if (type == Types.Source_Water || type == Types.Water) {
 						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
 						continue;
 					}
 				}
 				if (t == Types.Source_Water) {
-					if (type == Types.Source_Water || type == Types.Moving_Water) {
+					if (type == Types.Source_Water || type == Types.Water) {
 						continue;
 					}
 					if (type == Types.Source_Lava) {
 						setBlockType((byte) Types.Obsidian, nx, ny, nz);
 						continue;
 					}
-					if (type == Types.Moving_Lava) {
+					if (type == Types.Lava) {
 						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
 						continue;
 					}
 				}
-				if (t == Types.Moving_Water) {
+				if (t == Types.Water) {
 					int myAmt = getData(nx, ny, nz);
-					if (type == Types.Moving_Water && amt >= myAmt) {
+					if (type == Types.Water && newAmt >= myAmt) {
 						continue;
 					}
-					if (type == Types.Source_Lava || type == Types.Moving_Lava) {
+					if (type == Types.Source_Lava || type == Types.Lava) {
 						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
 						continue;
 					}
 				}
-				if (amt < 8 && (t == Types.Air || t == Types.Moving_Water || t == Types.Moving_Lava)) {
-					setBlockType((byte) (isLava ? Types.Moving_Lava : Types.Moving_Water), nx, ny, nz);
-					setData((byte) amt, nx, ny, nz);
+				if (newAmt < 8 && (t == Types.Air || t == Types.Water || t == Types.Lava)) {
+					setBlockType((byte) (isLava ? Types.Lava : Types.Water), nx, ny, nz);
+					setData((byte) newAmt, nx, ny, nz);
 					//System.out.println("setting " + amt);
 					flowQ.push(nx, ny, nz);
 				}
 			}}
 		}
-	}
+	}*/
 }

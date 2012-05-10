@@ -201,4 +201,12 @@ public class MCAFile {
 			
 		return true;
 	}
+
+	void clearAllEntities() {
+		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
+			if (chunks[z][x] != null) {
+				chunks[z][x].clearAllEntities();
+			}
+		}}
+	}
 }

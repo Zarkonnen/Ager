@@ -11,10 +11,8 @@ public class Types {
 	public static final int Redwood_Sapling = 6;
 	public static final int Birch_Sapling = 6;
 	public static final int Bedrock = 7;
-	public static final int Moving_Water = 9; // 8
-	public static final int Source_Water = 8; // 9
-	public static final int Moving_Lava = 11; // 10
-	public static final int Source_Lava = 10; // 11
+	public static final int Water = 9; // 8
+	public static final int Lava = 11; // 10
 	public static final int Sand = 12;
 	public static final int Gravel = 13;
 	public static final int Gold_Ore = 14;
