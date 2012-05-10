@@ -163,6 +163,24 @@ public class MCMap {
 		}
 	}
 	
+	public void newCalcSupport() {
+		for (MCAFile f : files.values()) {
+			f.newInitSupport();
+		}
+		
+		int pass = 1;
+		lp: while (true) {
+			System.out.println("FinishSupport pass " + pass++);
+			for (MCAFile f : files.values()) {
+				if (!f.newFinishSupport()) {
+					continue lp;
+				}
+			}
+			
+			return;
+		}
+	}
+	
 	public int getData(int x, int y, int z) {
 		Point fp = fileP(x, y, z);
 		if (!files.containsKey(fp)) { return -1; }

@@ -42,6 +42,29 @@ public class Rules {
 	
 	public static final int[] extraLightAttenuation = new int[1024];
 	
+	public static final int[] support = new int[1024];
+	public static final int[] weight = new int[1024];
+	public static final int[] maxSupport = new int[1024];
+	
+	static {
+		for (int i = 0; i < 1024; i++) {
+			support[i] = 6;
+			maxSupport[i] = 100;
+			weight[i] = 25;
+		}
+	}
+	
+	static void mat(int type, int sup, int wt) {
+		support[type + 1] = sup;
+		weight[type + 1] = wt;
+	}
+	
+	static void mat(int type, int sup, int wt, int ms) {
+		support[type + 1] = sup;
+		weight[type + 1] = wt;
+		maxSupport[type + 1] = ms;
+	}
+	
 	static void flows(int type) {
 		flows[type + 1] = true;
 	}
@@ -99,6 +122,84 @@ public class Rules {
 	}
 	
 	static {
+		// default is sup 6 wt 25 max 100
+		mat(Air, 0, 0, 0);
+		mat(Water, 0, 60);
+		mat(Lava, 100, 70, 0);
+		mat(More_Lava, 100, 70, 0);
+		mat(Stone, 2, 60);
+		mat(Cobblestone, 3, 50);
+		mat(Grass, 5, 35, 50);
+		mat(Dirt, 5, 35, 50);
+		mat(Sand, 100, 30, 0);
+		mat(Gravel, 100, 40, 0);
+		mat(Gold_Ore, 1, 70);
+		mat(Iron_Ore, 1, 65);
+		mat(Coal_Ore, 2, 55);
+		mat(Wood, 3, 45);
+		mat(Leaves, 1, 2, 15);
+		mat(Glass, 1, 50);
+		mat(Lapis_Lazuli_Ore, 1, 60);
+		mat(Dispenser, 2, 20);
+		mat(Sandstone, 10, 45, 80);
+		mat(Note_Block, 7, 15);
+		mat(Bed, 100, 30, 0);
+		mat(Powered_Rail, 100, 40, 0);
+		mat(Rails, 100, 40, 0);
+		mat(Detector_Rail, 100, 40, 0);
+		mat(Sticky_Piston, 4, 35);
+		mat(Web, 2, 1, 10);
+		mat(Tall_Grass, 100, 5, 0);
+		mat(Dead_Bush, 100, 8, 0);
+		mat(Piston, 5, 32);
+		mat(Piston_Head, 5, 0);
+		mat(Wool, 20, 10, 40);
+		mat(Dandelion, 100, 1, 0);
+		mat(Rose, 100, 1, 0);
+		mat(Brown_Mushroom, 100, 1, 0);
+		mat(Red_Mushroom, 100, 1, 0);
+		mat(Gold_Block, 1, 90);
+		mat(Iron_Block, 1, 80);
+		mat(Brick, 4, 45);
+		mat(Mossy_Cobblestone, 3, 50);
+		mat(Obsidian, 2, 60);
+		mat(Torch, 0, 5, 0);
+		mat(Diamond_Ore, 2, 50);
+		mat(Diamond_Block, 1, 45);
+		mat(Wheat_Crops, 100, 1, 0);
+		mat(Farmland, 5, 35, 50);
+		mat(Furnace, 2, 30);
+		mat(Burning_Furnace, 2, 30);
+		mat(Sign_Post, 100, 10, 0);
+		mat(Ladder, 100, 10, 0);
+		mat(Wall_Sign, 100, 10, 0);
+		mat(Redstone_Ore, 2, 50);
+		mat(Glowing_Redstone_Ore, 2, 50);
+		mat(Glowstone, 3, 30);
+		mat(Stone_Button, 100, 10, 0);
+		mat(Lever, 100, 10, 0);
+		mat(Snow, 100, 10, 0);
+		mat(Ice, 5, 50, 80);
+		mat(Snow_Block, 20, 25, 70);
+		mat(Cactus, 100, 30, 0);
+		mat(Clay, 20, 40, 50);
+		mat(Sugar_Cane, 100, 30, 0);
+		mat(Cake_Block, 100, 30, 0);
+		mat(Redstone_Repeater_Block_on, 100, 10, 0);
+		mat(Redstone_Repeater_Block_off, 100, 10, 0);
+		mat(Trapdoor, 0, 10, 0);
+		mat(Stone_Brick, 2, 55);
+		mat(Iron_Bars, 1, 20);
+		mat(Glass_Pane, 5, 15, 60);
+		mat(Pumpkin_Stem, 100, 10, 0);
+		mat(Melon_Stem, 100, 10, 0);
+		mat(Vines, 100, 10, 0);
+		mat(Lily_Pad, 100, 10, 0);
+		mat(Nether_Wart, 100, 10, 0);
+		mat(Enchantment_Table, 100, 40, 0);
+		mat(Brewing_Stand, 100, 10, 0);
+		mat(Cauldron, 100, 10, 0);
+		
 		flows(More_Lava); // qqDPS
 		flows(Lava);
 		//flows(Source_Lava);
@@ -343,6 +444,24 @@ public class Rules {
 		//itemsFallThrough(Source_Water);
 		itemsFallThrough(Lava);
 		itemsFallThrough(More_Lava);
+		itemsFallThrough(Rose);
+		itemsFallThrough(Dandelion);
+		itemsFallThrough(Tall_Grass);
+		itemsFallThrough(Dead_Bush);
+		itemsFallThrough(Brown_Mushroom);
+		itemsFallThrough(Red_Mushroom);
+		itemsFallThrough(Wheat_Crops);
+		itemsFallThrough(Rails);
+		itemsFallThrough(Wooden_Pressure_Plate);
+		itemsFallThrough(Stone_Pressure_Plate);
+		itemsFallThrough(Nether_Wart);
+		itemsFallThrough(Brewing_Stand);
+		itemsFallThrough(Fire);
+		itemsFallThrough(Snow);
+		itemsFallThrough(Lily_Pad);
+		itemsFallThrough(Torch);
+		itemsFallThrough(Lever);
+		itemsFallThrough(Stone_Button);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));

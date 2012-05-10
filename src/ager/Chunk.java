@@ -23,6 +23,12 @@ public class Chunk {
 	boolean lightFirstPass = true;
 	byte[][] sectionSkyLights = new byte[16][0];
 	
+	// New support code!
+	static final byte[] NO_SUPPORT = new byte[256 * 16 * 16];
+	byte[] supported = new byte[256 * 16 * 16];
+	boolean nFirstPass = true;
+	final BytePt4Stack nq = new BytePt4Stack(8);
+	
 	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
 		t = Tag.readFrom(is);
 		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
@@ -130,6 +136,90 @@ public class Chunk {
 		}
 		
 		q.compactTo(8);
+	}
+	
+	public void newInitSupport() {
+		nFirstPass = true;
+		System.arraycopy(NO_SUPPORT, 0, supported, 0, NO_SUPPORT.length);
+		
+		// Start out by going from the bottom and marking everything as supported until we hit air.
+		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+			int y = 0;
+			int type = getBlockType(x, y, z);
+			while (true) {
+				supported[y * 256 + z * 16 + x] = 100;
+				if (y == 255) { break; }
+				if (type != -1 && !Rules.providesSupport[type + 1]) {
+					break;
+				}
+				y++;
+				type = getBlockType(x, y, z);
+			}
+		}}
+	}
+	
+	static final int[] DX = { 0,  0,  0, -1,  1, -1, -1, -1,  0,  0,  1,  1,  1,  0,  0,  0, -1,  1};
+	static final int[] DY = {-1, -1, -1, -1, -1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1};
+	static final int[] DZ = { 0, -1,  1,  0,  0, -1,  0,  1, -1,  1, -1,  0,  1,  0, -1,  1,  0,  0};
+	static final int[] SC = { 2,  2,  2,  2,  2,  4,  1,  4,  1,  1,  4,  1,  4,  0,  2,  2,  2,  2};
+	
+	public void newFloodFill() {
+		/*if (2 * 2 == 4) { // qqDPS
+			q.clear();
+			return;
+		}*/
+		
+		if (nFirstPass) {
+			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+				byte supp = supported[y * 256 + z * 16 + x];
+				if (supp > 0 && Rules.providesSupport[getBlockType(x, y, z) + 1]) {
+					nq.push(x, y, z, supp);
+				}
+			}}}
+			nFirstPass = false;
+		}
+		
+		while (!nq.isEmpty()) {
+			nq.pop();
+			int srcType = getBlockType(nq.x, nq.y, nq.z);
+			int srcSupport = nq.l;
+			for (int j = 0; j < SC.length; j++) {
+				int nx = nq.x + DX[j];
+				int ny = nq.y + DY[j];
+				int nz = nq.z + DZ[j];
+				Chunk targetChunk = this;
+				if ((nx < 0 || nx >= 16) || (nz < 0 || nz >= 16)) {
+					// We've crossed state lines, er, chunk boundaries!
+					int chunkXOffset =
+							nx < 0 ? -1 : nx >= 16 ? 1 : 0;
+					int chunkZOffset =
+							nz < 0 ? -1 : nz >= 16 ? 1 : 0;
+					targetChunk = chunkCtx[chunkZOffset + 1][chunkXOffset + 1];
+					if (targetChunk == null) { continue; }
+					nx = (nx + 16) % 16;
+					nz = (nz + 16) % 16;
+				}
+				int targetType = targetChunk.getBlockType(nx, ny, nz);
+				if (targetType == -1) { continue; }
+				if (Rules.needsSupportFromBelow[targetType + 1] && !(DX[j] == 0 && DY[j] == 1 && DZ[j] == 0)) {
+					continue;
+				}
+				if ((Rules.needsSupportFromFaces[srcType + 1] || Rules.needsSupportFromFaces[targetType + 1]) && (Math.abs(DX[j]) + Math.abs(DY[j]) + Math.abs(DZ[j]) > 1)) {
+					continue;
+				}
+				int newSupport = srcSupport - SC[j] * Rules.support[srcType + 1];
+				if (newSupport > 0 && Rules.weight[targetType + 1] <= newSupport && newSupport > targetChunk.supported[ny * 256 + nz * 16 + nx]) {
+					targetChunk.supported[ny * 256 + nz * 16 + nx] = (byte) newSupport;
+					if (!Rules.providesSupport[targetType + 1]) { continue; }
+					int continuedSupport = Math.min(Rules.maxSupport[targetType + 1], newSupport);
+					if (continuedSupport > 0) {
+						targetChunk.nq.push(nx, ny, nz, continuedSupport);
+					}
+				}
+			}
+		}
+		
+		nq.compactTo(8);
 	}
 	
 	public void removeLighting() {

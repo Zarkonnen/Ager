@@ -25,7 +25,8 @@ public class Ager {
 				//continue; // qqDPS
 			}
 			if (lp % 4 == 2) {
-				m.calcSupport(true);
+				//m.calcSupport(true); qqDPS
+				m.newCalcSupport();
 			}
 			if (lp % 4 == 3) {
 				m.removeLighting();
@@ -38,10 +39,6 @@ public class Ager {
 				for (int zBlock = 0; zBlock < 32; zBlock++) {
 					for (int xBlock = 0; xBlock < 32; xBlock++) {
 						if (f.chunks[zBlock][xBlock] == null) { continue; }
-						/*if (lp % 4 == 3) {
-							f.chunks[zBlock][xBlock].calculateInitialSkyLights(lightQ, f.xOffset * 512 + xBlock * 16, f.zOffset * 512 + zBlock * 16);
-							m.floodSkyLight(lightQ);
-						}*/
 						for (int ySection = 0; ySection < 16; ySection++) {
 							if (f.chunks[zBlock][xBlock].sections[ySection] == null) { continue; }
 							byte[] sectionData = (byte[]) f.chunks[zBlock][xBlock].sections[ySection].findTagByName("Blocks").getValue();
@@ -73,8 +70,18 @@ public class Ager {
 									}
 								}
 								if (lp % 4 == 2) {
-									if (ac.type > Types.Air &&
+									/*if (ac.type > Types.Air &&
 										!f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx) &&
+										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
+									{
+										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
+									} else {
+										if (Rules.flows[ac.type + 1]) {
+											m.doFlow(x, y, z);
+										}
+									}*/
+									if (ac.type > Types.Air &&
+										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1] &&
 										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
