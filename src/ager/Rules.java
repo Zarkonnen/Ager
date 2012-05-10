@@ -99,6 +99,7 @@ public class Rules {
 	}
 	
 	static {
+		flows(More_Lava); // qqDPS
 		flows(Lava);
 		//flows(Source_Lava);
 		flows(Water);
@@ -181,6 +182,7 @@ public class Rules {
 		isTransparent(Dead_Bush);
 		isTransparent(Water);
 		isTransparent(Lava);
+		isTransparent(Enchantment_Table);
 		
 		itemVanishes(Dandelion, 0.4);
 		itemVanishes(Rose, 0.4);
@@ -338,7 +340,7 @@ public class Rules {
 		itemsFallThrough(Water);
 		//itemsFallThrough(Source_Water);
 		itemsFallThrough(Lava);
-		//itemsFallThrough(Source_Lava);
+		itemsFallThrough(More_Lava);
 		
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));

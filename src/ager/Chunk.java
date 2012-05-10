@@ -278,15 +278,17 @@ public class Chunk {
 	}
 	
 	public void calculateInitialSkyLights() {
-		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
+		for (int z = 0; z < 16; z++) { lp: for (int x = 0; x < 16; x++) {
 			int y = 255;
 			int l = 15;
 			int type = getBlockType(x, y, z);
 			while (Rules.transparent[type + 1]) {
+				l -= Rules.extraLightAttenuation[type + 1];
 				setSkyLight((byte) l, x, y, z);
-				lightQ.push(x, y, z, l - 1);
+				if (l <= 0) { continue lp; }
+				lightQ.push(x, y, z, l);
 				y--;
-				if (y < 0) { return; }
+				if (y < 0) { continue lp; }
 				type = getBlockType(x, y, z);
 			}
 		}}
@@ -320,20 +322,24 @@ public class Chunk {
 					if (!Rules.transparent[localType + 1]) { continue; }
 					int localL = targetChunk.getSkyLight(xInOtherChunk, ny, zInOtherChunk);
 					if (localL == -1) { continue; } // There is no block there.
-					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
-					targetChunk.setSkyLight((byte) lightQ.l, xInOtherChunk, ny, zInOtherChunk);
-					if (lightQ.l - Rules.extraLightAttenuation[localType + 1] > 1) {
-						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, lightQ.l - 1 - Rules.extraLightAttenuation[localType + 1]);
+					int newLight = lightQ.l - Rules.extraLightAttenuation[localType + 1];
+					if (newLight <= 0) { continue; }
+					if (localL >= newLight) { continue; } // It's already as bright or brighter than we can make it.
+					targetChunk.setSkyLight((byte) newLight, xInOtherChunk, ny, zInOtherChunk);
+					if (newLight > 1) {
+						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, newLight - 1);
 					}
 				} else {
 					int localType = getBlockType(nx, ny, nz);
 					if (!Rules.transparent[localType + 1]) { continue; }
 					int localL = getSkyLight(nx, ny, nz);
 					if (localL == -1) { continue; } // There is no block there.
-					if (localL >= lightQ.l) { continue; } // It's already as bright or brighter than we can make it.
-					setSkyLight((byte) lightQ.l, nx, ny, nz);
-					if (lightQ.l - Rules.extraLightAttenuation[localType + 1] > 1) {
-						lightQ.push(nx, ny, nz, lightQ.l - 1 - Rules.extraLightAttenuation[localType + 1]);
+					int newLight = lightQ.l - Rules.extraLightAttenuation[localType + 1];
+					if (newLight <= 0) { continue; }
+					if (localL >= newLight) { continue; } // It's already as bright or brighter than we can make it.
+					setSkyLight((byte) newLight, nx, ny, nz);
+					if (newLight > 1) {
+						lightQ.push(nx, ny, nz, newLight - 1);
 					}
 				}
 			}

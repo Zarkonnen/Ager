@@ -299,34 +299,31 @@ public class MCMap {
 	
 	public void doFlow(int x, int y, int z) {
 		int startLevel = getData(x, y, z);
-		if (startLevel != 0) {
+		/*if (startLevel != 0) {
 			return;
-		}
+		}*/
+		/*int startType = getBlockType(x, y, z);
+		System.out.println(startType);*/
 		IntPt3Stack flowQ = new IntPt3Stack(10);
 		flowQ.push(x, y, z);
 		while (!flowQ.isEmpty()) {
 			flowQ.pop();
 			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
 			int level = getData(flowQ.x, flowQ.y, flowQ.z);
+			System.out.println("type " + type + " level " + level + " x " + flowQ.x + " y " + flowQ.y + " z " + flowQ.z);
 			boolean isSource = level == 0;
 			
 			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
-			int belowLevel = getData(flowQ.x, flowQ.y - 1, flowQ.z);
+			//int belowLevel = getData(flowQ.x, flowQ.y - 1, flowQ.z);
 			boolean hasBottom = belowType != type && belowType != Types.Air;
-			
-			if (!hasBottom) {
-				setBlockType((byte) type, flowQ.x, flowQ.y - 1, flowQ.z);
-				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
-				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
-			}
 			
 			if (hasBottom || isSource) {
 				for (int j = 0; j < 4; j++) {
-					int newLevel = (level == 8 ? 0 : level) + type == Types.Water ? 1 : 2;
+					final int newLevel = (level == 8 ? 0 : level) + (type == Types.Water ? 1 : 2);
 					if (newLevel > 7) { continue; }
-					int nx = flowQ.x + NS_X[j];
-					int ny = flowQ.y;
-					int nz = flowQ.z + NS_Z[j];
+					final int nx = flowQ.x + NS_X[j];
+					final int ny = flowQ.y;
+					final int nz = flowQ.z + NS_Z[j];
 					int nType = getBlockType(nx, ny, nz);
 					if (nType == type && getData(nx, ny, nz) <= newLevel) {
 						continue;
@@ -337,6 +334,12 @@ public class MCMap {
 						flowQ.push(nx, ny, nz);
 					}
 				}
+			}
+			
+			if (!hasBottom) {
+				setBlockType((byte) type, flowQ.x, flowQ.y - 1, flowQ.z);
+				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
+				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
 			}
 		}
 	}
