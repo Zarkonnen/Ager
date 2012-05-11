@@ -30,7 +30,7 @@ public class StoredItemRule {
 			if (tag != null) {
 				Tag ench = tag.findTagByName("ench");
 				if (ench != null && ((Tag[]) ench.getValue()).length != 0) {
-					System.out.println("Skipping enchanted item!");
+					//System.out.println("Skipping enchanted item!");
 					continue; 
 				}
 			}

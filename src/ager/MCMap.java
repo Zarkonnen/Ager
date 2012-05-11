@@ -10,7 +10,7 @@ import java.util.HashMap;
 import unknown.Tag;
 
 public class MCMap {
-	public final HashMap<Point, MCAFile> files = new HashMap<Point, MCAFile>();
+	public final CoordMap<MCAFile> files = new CoordMap<MCAFile>();
 	private final File worldF;
 	//public final Tag levelDat;
 
@@ -30,11 +30,10 @@ public class MCMap {
 				String[] bits = f.getName().split("[.]");
 				int x = Integer.parseInt(bits[1]);
 				int z = Integer.parseInt(bits[2]);
-				files.put(new Point(x, z), new MCAFile(new File(worldF, "region"), x, z));
+				files.put(x, z, new MCAFile(new File(worldF, "region"), x, z));
 			}
 		}
-		
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 				int chunkX = f.xOffset * 32 + x;
 				int chunkZ = f.zOffset * 32 + z;
@@ -51,7 +50,7 @@ public class MCMap {
 	}
 	
 	public void writeAndClose() throws IOException {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.writeAndClose();
 		}
 		
@@ -90,39 +89,39 @@ public class MCMap {
 	}
 	
 	public final Chunk getChunk(int chunkX, int chunkZ) {
-		Point fp = chunkFileP(chunkX, chunkZ);
-		if (!files.containsKey(fp)) { return null; }
-		return files.get(fp).getChunk(chunkRem(chunkX), chunkRem(chunkZ));
+		MCAFile f = files.get(chunkX, chunkZ);
+		if (f == null) { return null; }
+		return f.getChunk(chunkRem(chunkX), chunkRem(chunkZ));
 	}
 	
 	public boolean getPartOfBlob(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return false; }
-		return files.get(fp).getPartOfBlob(rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return false; }
+		return f.getPartOfBlob(rem(x), y, rem(z));
 	}
 	
 	public void setPartOfBlob(int x, int y, int z, boolean value) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setPartOfBlob(rem(x), y, rem(z), value);
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setPartOfBlob(rem(x), y, rem(z), value);
 	}
 	
 	public void clearPartOfBlob() {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.clearPartOfBlob();
 		}
 	}
 	
 	public int getBlockType(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return -1; }
-		return files.get(fp).getBlockType(rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return -1; }
+		return f.getBlockType(rem(x), y, rem(z));
 	}
 	
 	public void setBlockType(byte type, int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setBlockType(type, rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setBlockType(type, rem(x), y, rem(z));
 	}
 	
 	public void healBlockLight(int x, int y, int z) {
@@ -146,14 +145,14 @@ public class MCMap {
 	}
 	
 	public void calcSupport(boolean postRun) {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.initSupport(postRun);
 		}
 		
 		int pass = 1;
 		lp: while (true) {
 			System.out.println("FinishSupport pass " + pass++);
-			for (MCAFile f : files.values()) {
+			for (MCAFile f : files) {
 				if (!f.finishSupport(postRun)) {
 					continue lp;
 				}
@@ -164,14 +163,14 @@ public class MCMap {
 	}
 	
 	public void newCalcSupport() {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.newInitSupport();
 		}
 		
 		int pass = 1;
 		lp: while (true) {
 			System.out.println("FinishSupport pass " + pass++);
-			for (MCAFile f : files.values()) {
+			for (MCAFile f : files) {
 				if (!f.newFinishSupport()) {
 					continue lp;
 				}
@@ -182,66 +181,67 @@ public class MCMap {
 	}
 	
 	public int getData(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return -1; }
-		return files.get(fp).getData(rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return -1; }
+		return f.getData(rem(x), y, rem(z));
 	}
 	
 	public void setData(byte data, int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setData(data, rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setData(data, rem(x), y, rem(z));
 	}
 	
 	public int getSkyLight(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return -1; }
-		return files.get(fp).getSkyLight(rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return -1; }
+		return f.getSkyLight(rem(x), y, rem(z));
 	}
 	
 	public void setSkyLight(byte light, int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setSkyLight(light, rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setSkyLight(light, rem(x), y, rem(z));
 	}
 	
 	public int getBlockLight(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return -1; }
-		return files.get(fp).getBlockLight(rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return -1; }
+		return f.getBlockLight(rem(x), y, rem(z));
 	}
 	
 	public void setBlockLight(byte light, int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setBlockLight(light, rem(x), y, rem(z));
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setBlockLight(light, rem(x), y, rem(z));
 	}
 
 	public void clearTileEntity(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).clearTileEntity(rem(x), y, rem(z), x, y, z);
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.clearTileEntity(rem(x), y, rem(z), x, y, z);
 	}
 	
 	public Tag getTileEntity(int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return null; }
-		return files.get(fp).getTileEntity(rem(x), y, rem(z), x, y, z);
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return null; }
+		return f.getTileEntity(rem(x), y, rem(z), x, y, z);
 	}
+	
 	public void setTileEntity(Tag te, int x, int y, int z) {
-		Point fp = fileP(x, y, z);
-		if (!files.containsKey(fp)) { return; }
-		files.get(fp).setTileEntity(te, rem(x), y, rem(z), x, y, z);
+		MCAFile f = files.get(fileC(x), fileC(z));
+		if (f == null) { return; }
+		f.setTileEntity(te, rem(x), y, rem(z), x, y, z);
 	}
 	
 	public void clearAllEntities() {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.clearAllEntities();
 		}
 	}
 	
 	public void removeLighting() {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.removeLighting();
 		}
 	}
@@ -278,14 +278,14 @@ public class MCMap {
 	}
 	
 	public void calcSkyLight() {
-		for (MCAFile f : files.values()) {
+		for (MCAFile f : files) {
 			f.calculateInitialSkyLights();
 		}
 		
 		int pass = 1;
 		lp: while (true) {
 			System.out.println("FinishSkyLights pass " + pass++);
-			for (MCAFile f : files.values()) {
+			for (MCAFile f : files) {
 				if (!f.finishSkyLights()) {
 					continue lp;
 				}

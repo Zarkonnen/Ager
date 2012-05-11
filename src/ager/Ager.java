@@ -8,6 +8,11 @@ import java.io.File;
 import java.util.Random;
 
 public class Ager {
+	public static final int APPLY_RULES = 0;
+	public static final int APPLY_SECONDARY_RULES = 1;
+	public static final int FALL = 2;
+	public static final int LIGHTING = 3;
+	
 	public static void main(String[] args) throws Exception {
 		Random r = new Random();
 		
@@ -18,24 +23,30 @@ public class Ager {
 		m.calcSupport(false); //qqDPS EXTREME GRAVITYS
 		IntPt4Stack lightQ = new IntPt4Stack(2048);
 		
-		int loops = args.length > 1 ? Integer.parseInt(args[1]) * 4 : 4;
+		int iters = args.length > 1 ? Integer.parseInt(args[1]) : 1;
+		int loops = iters * 4;
 		for (int lp = 0; lp < loops; lp++) {
-			if (lp % 4 == 0 || lp % 4 == 1) {
+			final int phase = lp % 4;
+			final int iter = lp / 4;
+			final boolean nextToFinalIter = iter == iters - 2;
+			final boolean finalIter = iter == iters - 1;
+			final boolean tenthIter = iter % 10 == 0;
+			final boolean doFallAndLights = nextToFinalIter || finalIter || tenthIter;
+			
+			if (phase == APPLY_RULES || phase == APPLY_SECONDARY_RULES) {
 				m.clearPartOfBlob();
-				//continue; // qqDPS
 			}
-			if (lp % 4 == 2) {
-				//m.calcSupport(true); qqDPS
+			if (phase == FALL && doFallAndLights) {
 				m.newCalcSupport();
 			}
-			if (lp % 4 == 3) {
+			if (phase == LIGHTING && doFallAndLights) {
 				m.removeLighting();
 				m.calcSkyLight();
 			}
 			
 			int fi = 0;
 			Rule.ApplicationCache ac = new Rule.ApplicationCache();
-			for (MCAFile f : m.files.values()) {
+			for (MCAFile f : m.files) {
 				for (int zBlock = 0; zBlock < 32; zBlock++) {
 					for (int xBlock = 0; xBlock < 32; xBlock++) {
 						if (f.chunks[zBlock][xBlock] == null) { continue; }
@@ -50,7 +61,7 @@ public class Ager {
 								ac.knownX = x;
 								ac.knownY = y;
 								ac.knownZ = z;
-								if (lp % 4 == 0) {
+								if (phase == APPLY_RULES) {
 									boolean changed = false;
 									if (Rules.ruleTypes[ac.type + 1]) {
 										for (Rule rule : Rules.rulesForType[ac.type + 1]) {
@@ -63,23 +74,13 @@ public class Ager {
 										}
 									}
 								}
-								if (lp % 4 == 1) {
+								if (phase == APPLY_SECONDARY_RULES) {
 									if (!Rules.secondRuleTypes[ac.type + 1]) { continue; }
 									for (Rule rule : Rules.secondRulesForType[ac.type + 1]) {
 										if (rule.apply(x, y, z, m, r, ac)) { break; }
 									}
 								}
-								if (lp % 4 == 2) {
-									/*if (ac.type > Types.Air &&
-										!f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx) &&
-										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
-									{
-										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
-									} else {
-										if (Rules.flows[ac.type + 1]) {
-											m.doFlow(x, y, z);
-										}
-									}*/
+								if (phase == FALL && doFallAndLights) {
 									if (ac.type > Types.Air &&
 										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1] &&
 										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
@@ -90,21 +91,15 @@ public class Ager {
 											m.doFlow(x, y, z);
 										}
 									}
-									/*if (ac.type > Types.Air &&
-										f.chunks[zBlock][xBlock].isSupported.get(y * 256 + lz * 16 + lx)
-									)
-									{
-										f.chunks[zBlock][xBlock].setBlockType((byte) Types.Gold_Block, lx, y, lz);
-									}*/
 								}
-								if (lp % 4 == 3) {
+								if (phase == LIGHTING && doFallAndLights) {
 									m.floodBlockLight(x, y, z, lightQ);
 								}
 							}}}
 						} 
 					}
 				}
-				System.out.println(++fi + "/" + m.files.values().size());
+				System.out.println(++fi + "/" + m.files.size());
 			}	
 		}
 		

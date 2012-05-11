@@ -360,6 +360,7 @@ public class Chunk {
 			int type = getBlockType(x, y, z);
 			while (Rules.transparent[type + 1]) {
 				l -= Rules.extraLightAttenuation[type + 1];
+				if (l < 0) { l = 0; }
 				setSkyLight((byte) l, x, y, z);
 				if (l <= 0) { continue lp; }
 				//lightQ.push(x, y, z, l);

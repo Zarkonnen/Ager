@@ -466,11 +466,11 @@ public class Rules {
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Water)).moreLikelyWhen(touching(0.1, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Water)).moreLikelyWhen(touching(0.06, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
 				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").
-				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Grass growth.").
 				p(1).when(is(Dirt)).when(nextTo(Grass)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
@@ -534,9 +534,9 @@ public class Rules {
 		rule().desc("Farmland vanishing.").
 				p(0.6).when(is(Farmland)).when(below(Air)).then(become(Dirt));
 		rule().desc("Glass vanishing.").
-				p(0.5).when(is(Glass)).then(become(Air));
+				p(0.2).when(is(Glass)).then(become(Air));
 		rule().desc("Glass vanishing.").
-				p(0.7).when(is(Glass_Pane)).then(become(Air));
+				p(0.4).when(is(Glass_Pane)).then(become(Air));
 		rule().desc("Jack o' Lantern vanishing.").
 				p(0.7).when(is(Jack_O_Lantern)).then(become(Pumpkin));
 		rule().desc("Fence vanishing.").
@@ -628,7 +628,7 @@ public class Rules {
 		rule().desc("Trees rarely disappearing en bloc.").
 				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).
 				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
-				then(applyNearby(4, new Rule().p(0.02).when(is(Air)).when(above(Grass)).then(become(Sapling))));
+				then(applyNearby(8, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling))));
 		rule().desc("Non-trees disappearing individually.").
 				p(1.0).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobDoesNotContain(Leaves)).then(applyIndividually(new Rule().p(0.04).moreLikelyWhen(below(0.07, Air)).moreLikelyWhen(skyExposed(0.07)).then(become(Air))));
 		
