@@ -189,6 +189,7 @@ public class Rules {
 		mat(Redstone_Repeater_Block_off, 100, 10, 0);
 		mat(Trapdoor, 0, 10, 0);
 		mat(Stone_Brick, 2, 55);
+		mat(Double_Stone_Slab, 3, 55);
 		mat(Iron_Bars, 1, 20);
 		mat(Glass_Pane, 5, 15, 60);
 		mat(Pumpkin_Stem, 100, 10, 0);
@@ -439,6 +440,7 @@ public class Rules {
 		requiresDirectSupport(Nether_Brick_Fence);
 		requiresDirectSupport(Iron_Bars);
 		
+		itemsFallThrough(UNKNOWN);
 		itemsFallThrough(Air);
 		itemsFallThrough(Water);
 		//itemsFallThrough(Source_Water);
@@ -461,6 +463,7 @@ public class Rules {
 		itemsFallThrough(Lily_Pad);
 		itemsFallThrough(Torch);
 		itemsFallThrough(Lever);
+		itemsFallThrough(Wall_Sign);
 		itemsFallThrough(Stone_Button);
 		
 		rule().desc("Exposed cobble turns to gravel.").
@@ -503,6 +506,8 @@ public class Rules {
 				p(0.005).when(is(Piston)).then(become(Air));
 		rule().desc("Redstone lamp vanishing.").
 				p(0.01).when(is(Redstone_Lamp_off)).then(become(Air));
+		rule().desc("Glowstone vanishing.").
+				p(0.01).when(is(Glowstone)).moreLikelyWhen(skyExposed(0.05)).then(become(Air));
 		rule().desc("Redstone lamp vanishing.").
 				p(0.01).when(is(Redstone_Lamp_on)).then(become(Air));
 		rule().desc("Rail vanishing.").
@@ -662,11 +667,11 @@ public class Rules {
 		
 		// Hice, tmp. qqDPS
 		/*rule().desc("Spawning a house.").
-				p(1.0).when(is(Grass)).then(new CreateStructure(HOUSE, null, -2, 1, -2, 0, 15));*/
+				p(1.0).when(anyOf(Grass, Stone)).then(new CreateStructure(HOUSE, null, -2, 1, -2, 0, 15));*/
 		
 		// Spawning spawners
-		rule().desc("Spawning a spawner.").
-				p(0.2).when(is(Cobblestone)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0)).
+		secondRule().desc("Spawning a spawner.").
+				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0)).
 				then(new Outcome()
 		{
 			@Override
@@ -686,7 +691,7 @@ public class Rules {
 		});
 		
 		// Spawning trees.
-		rule().desc("Spawning a tree.").
+		secondRule().desc("Spawning a tree.").
 				p(0.7).when(is(Sapling)).then(become(Air)).then(new CreateStructure(TREE_6X5X5, null, -2, 0, -2, 8, 15));
 		
 		// Detaching
@@ -786,6 +791,13 @@ public class Rules {
 					ruleTypes[((Is) cond.check()).type + 1] = true;
 					typesL.add(((Is) cond.check()).type);
 				}
+				if (cond.check() instanceof AnyOf) {
+					for (int i = 0; i < ((AnyOf) cond.check()).types.length; i++) {
+						int t = ((AnyOf) cond.check()).types[i];
+						ruleTypes[t + 1] = true;
+						typesL.add(t);
+					}
+				}
 				if (cond.check() instanceof IsConnectedBlobOf) {
 					for (int t : ((IsConnectedBlobOf) cond.check()).types) {
 						ruleTypes[t + 1] = true;
@@ -807,6 +819,13 @@ public class Rules {
 				if (cond.check() instanceof Is) {
 					secondRuleTypes[((Is) cond.check()).type + 1] = true;
 					typesL.add(((Is) cond.check()).type);
+				}
+				if (cond.check() instanceof AnyOf) {
+					for (int i = 0; i < ((AnyOf) cond.check()).types.length; i++) {
+						int t = ((AnyOf) cond.check()).types[i];
+						secondRuleTypes[t + 1] = true;
+						typesL.add(t);
+					}
 				}
 				if (cond.check() instanceof IsConnectedBlobOf) {
 					for (int t : ((IsConnectedBlobOf) cond.check()).types) {

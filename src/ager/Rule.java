@@ -12,6 +12,7 @@ public class Rule {
 		IntPt3Stack connectedBlob;
 		int cbKnownX, cbKnownY, cbKnownZ;
 		int[] cbTypes;
+		Rule currentRule;
 		public int getType(int x, int y, int z, MCMap map) {
 			if (x == knownX && y == knownY && z == knownZ) { return type; }
 			type = map.getBlockType(x, y, z);
@@ -27,6 +28,7 @@ public class Rule {
 			knownZ = Integer.MIN_VALUE;
 			connectedBlob = null;
 			cbTypes = null;
+			currentRule = null;
 		}
 		
 		public IntPt3Stack getConnectedBlob(int x, int y, int z, int[] types) {
@@ -52,6 +54,7 @@ public class Rule {
 	public Rule recurseDownwardsOnSuccess() { recurseDownwardsOnSuccess = true; return this; }
 	
 	public boolean apply(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+		ac.currentRule = this;
 		for (Condition c : conditions) {
 			if (!c.test(x, y, z, map, ac)) { return false; }
 		}
@@ -65,10 +68,10 @@ public class Rule {
 		}
 		
 		for (Outcome o : outcomes) { if (!o.perform(x, y, z, map, r, ac)) { return false; } }
-		if (recurseDownwardsOnSuccess && y > 0) {
+		/*if (recurseDownwardsOnSuccess && y > 0) {
 			//System.out.println("rec");
 			apply(x, y - 1, z, map, r, ac);
-		}
+		}*/
 		return true;
 	}
 	
@@ -140,6 +143,22 @@ public class Rule {
 	}
 	
 	public static Condition is(int type) { return new MinimumCondition(new Is(type), 1); }
+	
+	public static class AnyOf implements Check {
+		final int[] types;
+
+		public AnyOf(int[] types) {
+			this.types = types;
+			Arrays.sort(types);
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			return (Arrays.binarySearch(types, ac.getType(x, y, z, map)) >= 0 ? 1 : 0);
+		}
+	}
+	
+	public static Condition anyOf(int... types) { return new MinimumCondition(new AnyOf(types), 1); }
 	
 	public static class HasData implements Check {
 		final int data;
@@ -341,7 +360,7 @@ public class Rule {
 	public static void fall(int x, int y, int z, MCMap map, int becomes) {
 		// how deep can we go?
 		int fallY = y;
-		while (Rules.fallThru[map.getBlockType(x, --fallY, z) + 1]) {}
+		while (Rules.fallThru[map.getBlockType(x, --fallY, z) + 1] && fallY >= 0) {}
 		fallY++;
 		if (fallY < y) {
 			if (becomes != Types.Air) { map.setBlockType((byte) becomes, x, fallY, z); }
@@ -375,7 +394,7 @@ public class Rule {
 				if (dx == 0 && dz == 0) { continue; }
 				if (dx != 0 && dz != 0) { continue; }
 				int dist = -1;
-				while (Rules.fallThru[map.getBlockType(x + dx, y - ++dist, z + dz) + 1]) {}
+				while (Rules.fallThru[map.getBlockType(x + dx, y - ++dist, z + dz) + 1] && (y - dist > 1)) {}
 				dist--;
 				if (dist >= minDistance && dist > bestDistance) {
 					bestDx = dx;
@@ -392,6 +411,10 @@ public class Rule {
 				map.setBlockType((byte) Types.Air, x, y, z);
 				map.healBlockLight(x, y, z);
 				// Light?
+				if (ac.currentRule.recurseDownwardsOnSuccess) {
+					ac.currentRule.apply(x + bestDx, y - bestDistance, z + bestDz, map, r, ac);
+					ac.currentRule.apply(x, y - 1, z, map, r, ac);
+				}
 				return true;
 			}
 			return false;

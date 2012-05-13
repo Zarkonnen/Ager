@@ -1,6 +1,7 @@
 package ager;
 
 public class Types {	
+	public static final int UNKNOWN = -1;
 	public static final int Air = 0;
 	public static final int Stone = 1;
 	public static final int Grass = 2;

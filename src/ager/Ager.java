@@ -9,9 +9,9 @@ import java.util.Random;
 
 public class Ager {
 	public static final int APPLY_RULES = 0;
-	public static final int APPLY_SECONDARY_RULES = 1;
-	public static final int FALL = 2;
-	public static final int LIGHTING = 3;
+	public static final int FALL = 1;
+	public static final int LIGHTING = 2;
+	public static final int APPLY_SECONDARY_RULES = 3;
 	
 	public static void main(String[] args) throws Exception {
 		Random r = new Random();
@@ -31,15 +31,15 @@ public class Ager {
 			final boolean nextToFinalIter = iter == iters - 2;
 			final boolean finalIter = iter == iters - 1;
 			final boolean tenthIter = iter % 10 == 0;
-			final boolean doFallAndLights = nextToFinalIter || finalIter || tenthIter;
+			final boolean doExtendedPhase = nextToFinalIter || finalIter || tenthIter;
 			
 			if (phase == APPLY_RULES || phase == APPLY_SECONDARY_RULES) {
 				m.clearPartOfBlob();
 			}
-			if (phase == FALL && doFallAndLights) {
+			if (phase == FALL && doExtendedPhase) {
 				m.newCalcSupport();
 			}
-			if (phase == LIGHTING && doFallAndLights) {
+			if (phase == LIGHTING && doExtendedPhase) {
 				m.removeLighting();
 				m.calcSkyLight();
 			}
@@ -74,16 +74,10 @@ public class Ager {
 										}
 									}
 								}
-								if (phase == APPLY_SECONDARY_RULES) {
-									if (!Rules.secondRuleTypes[ac.type + 1]) { continue; }
-									for (Rule rule : Rules.secondRulesForType[ac.type + 1]) {
-										if (rule.apply(x, y, z, m, r, ac)) { break; }
-									}
-								}
-								if (phase == FALL && doFallAndLights) {
+								if (phase == FALL && doExtendedPhase) {
 									if (ac.type > Types.Air &&
-										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1] &&
-										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx))
+										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1]/* &&
+										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx)*/)
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
 									} else {
@@ -92,8 +86,14 @@ public class Ager {
 										}
 									}
 								}
-								if (phase == LIGHTING && doFallAndLights) {
+								if (phase == LIGHTING && doExtendedPhase) {
 									m.floodBlockLight(x, y, z, lightQ);
+								}
+								if (phase == APPLY_SECONDARY_RULES && doExtendedPhase) {
+									if (!Rules.secondRuleTypes[ac.type + 1]) { continue; }
+									for (Rule rule : Rules.secondRulesForType[ac.type + 1]) {
+										if (rule.apply(x, y, z, m, r, ac)) { break; }
+									}
 								}
 							}}}
 						} 

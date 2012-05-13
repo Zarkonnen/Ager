@@ -89,7 +89,7 @@ public class MCMap {
 	}
 	
 	public final Chunk getChunk(int chunkX, int chunkZ) {
-		MCAFile f = files.get(chunkX, chunkZ);
+		MCAFile f = files.get(chunkFileC(chunkX), chunkFileC(chunkZ));
 		if (f == null) { return null; }
 		return f.getChunk(chunkRem(chunkX), chunkRem(chunkZ));
 	}
