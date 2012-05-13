@@ -393,6 +393,7 @@ public class Rule {
 			for (int dx = -1; dx < 2; dx++) { for (int dz = -1; dz < 2; dz++) {
 				if (dx == 0 && dz == 0) { continue; }
 				if (dx != 0 && dz != 0) { continue; }
+				if (map.getChunk((x + dx) / 16, (z + dz) / 16) == null) { continue; } // Don't slide off loaded map!
 				int dist = -1;
 				while (Rules.fallThru[map.getBlockType(x + dx, y - ++dist, z + dz) + 1] && (y - dist > 1)) {}
 				dist--;
@@ -506,6 +507,7 @@ public class Rule {
 	
 	public static Condition connectedBlobContains(int type) { return new MinimumCondition(new ConnectedBlobTypeCount(type), 1); }
 	public static Condition connectedBlobDoesNotContain(int type) { return new MaximumCondition(new ConnectedBlobTypeCount(type), 0); }
+	public static ProbabilityModifier connectedBlobContains(double p, int type) { return new ProbabilityModifier(new ConnectedBlobTypeCount(type), p); }
 	
 	public static class ApplyIndividually implements Outcome {
 		final Rule rule;

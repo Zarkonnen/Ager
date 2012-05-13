@@ -130,7 +130,7 @@ public class Rules {
 		mat(Stone, 2, 60);
 		mat(Cobblestone, 3, 50);
 		mat(Grass, 5, 35, 50);
-		mat(Dirt, 5, 35, 50);
+		mat(Dirt, 5, 30, 70);
 		mat(Sand, 100, 30, 0);
 		mat(Gravel, 100, 40, 0);
 		mat(Gold_Ore, 1, 70);
@@ -167,7 +167,7 @@ public class Rules {
 		mat(Diamond_Ore, 2, 50);
 		mat(Diamond_Block, 1, 45);
 		mat(Wheat_Crops, 100, 1, 0);
-		mat(Farmland, 5, 35, 50);
+		mat(Farmland, 5, 30, 70);
 		mat(Furnace, 2, 30);
 		mat(Burning_Furnace, 2, 30);
 		mat(Sign_Post, 100, 10, 0);
@@ -632,6 +632,7 @@ public class Rules {
 		// Trees and non-trees.
 		rule().desc("Trees rarely disappearing en bloc.").
 				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).
+				moreLikelyWhen(connectedBlobContains(-0.001, Wood)).
 				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
 				then(applyNearby(8, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling))));
 		rule().desc("Non-trees disappearing individually.").
