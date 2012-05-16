@@ -630,11 +630,26 @@ public class Rules {
 				p(0.01).when(is(Stone_Brick_Stairs)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.002, Air)).then(become(Air));
 		
 		// Trees and non-trees.
-		rule().desc("Trees rarely disappearing en bloc.").
-				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).
+		rule().desc("Oak trees rarely disappearing en bloc.").
+				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).when(connectedBlobContainsData(Oak)).
 				moreLikelyWhen(connectedBlobContains(-0.001, Wood)).
 				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
 				then(applyNearby(8, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling))));
+		rule().desc("Spruce trees rarely disappearing en bloc.").
+				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).when(connectedBlobContainsData(Spruce)).
+				moreLikelyWhen(connectedBlobContains(-0.001, Wood)).
+				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
+				then(applyNearby(8, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling, Spruce))));
+		rule().desc("Birch trees rarely disappearing en bloc.").
+				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).when(connectedBlobContainsData(Birch)).
+				moreLikelyWhen(connectedBlobContains(-0.001, Wood)).
+				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
+				then(applyNearby(8, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling, Birch))));
+		rule().desc("Small jungle trees rarely disappearing en bloc.").
+				p(0.02).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobContains(Leaves)).when(connectedBlobContainsData(Jungle)).
+				moreLikelyWhen(connectedBlobContains(-0.001, Wood)).
+				then(applyCollectively(new Rule().p(1.0).then(become(Air)))).
+				then(applyNearby(12, new Rule().p(0.05).when(is(Air)).when(above(Grass)).then(become(Sapling, Jungle))));
 		rule().desc("Non-trees disappearing individually.").
 				p(1.0).when(isConnectedBlobOf(Wood, Leaves, Vines)).when(connectedBlobDoesNotContain(Leaves)).then(applyIndividually(new Rule().p(0.04).moreLikelyWhen(below(0.07, Air)).moreLikelyWhen(skyExposed(0.07)).then(become(Air))));
 		

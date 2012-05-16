@@ -342,9 +342,15 @@ public class Rule {
 	
 	public static class Become implements Outcome {
 		final int type;
+		final int data;
 
 		public Become(int type) {
 			this.type = type;
+			data = -1;
+		}
+		public Become(int type, int data) {
+			this.type = type;
+			this.data = data;
 		}
 		
 		@Override
@@ -353,6 +359,9 @@ public class Rule {
 				map.clearTileEntity(x, y, z);
 			}
 			map.setBlockType((byte) type, x, y, z);
+			if (data != -1) {
+				map.setData((byte) data, x, y, z);
+			}
 			if (type == Types.Air) {
 				map.setSkyLight((byte) map.getSkyLight(x, y + 1, z), x, y, z);
 				map.healBlockLight(x, y, z);
@@ -363,6 +372,7 @@ public class Rule {
 	}
 	
 	public static Outcome become(int type) { return new Become(type); }
+	public static Outcome become(int type, int data) { return new Become(type, data); }
 	
 	public static class Fall implements Outcome {
 		@Override
@@ -525,6 +535,30 @@ public class Rule {
 	public static Condition connectedBlobContains(int type) { return new MinimumCondition(new ConnectedBlobTypeCount(type), 1); }
 	public static Condition connectedBlobDoesNotContain(int type) { return new MaximumCondition(new ConnectedBlobTypeCount(type), 0); }
 	public static ProbabilityModifier connectedBlobContains(double p, int type) { return new ProbabilityModifier(new ConnectedBlobTypeCount(type), p); }
+	
+	public static class ConnectedBlobDataCount implements Check {
+		final int data;
+
+		public ConnectedBlobDataCount(int data) {
+			this.data = data;
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			IntPt3Stack blob = ac.getConnectedBlob(x, y, z, null);
+			if (blob == null) { return 0; }
+			int count = 0;
+			for (int i = 0; i < blob.size(); i++) {
+				blob.get(i);
+				if (map.getData(blob.x, blob.y, blob.z) == data) {
+					count++;
+				}
+			}
+			return count;
+		}
+	}
+	
+	public static Condition connectedBlobContainsData(int data) { return new MinimumCondition(new ConnectedBlobDataCount(data), 1); }
 	
 	public static class ApplyIndividually implements Outcome {
 		final Rule rule;
