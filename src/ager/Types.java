@@ -21,8 +21,10 @@ public class Types {
 	public static final int Iron_Ore = 15;
 	public static final int Coal_Ore = 16;
 	public static final int Wood = 17;
-	public static final int Redwood = 17;
-	public static final int Birchwood = 17;
+		public static final int Oak = 0;
+		public static final int Spruce = 1;
+		public static final int Birch = 2;
+		public static final int Jungle = 3;
 	public static final int Leaves = 18;
 	public static final int Redwood_Leaves = 18;
 	public static final int Birchwood_Leaves = 18;

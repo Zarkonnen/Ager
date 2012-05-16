@@ -2,6 +2,8 @@ package ager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import unknown.Tag;
 
@@ -174,6 +176,21 @@ public class Rule {
 	}
 	
 	public static Condition hasData(int data) { return new MinimumCondition(new HasData(data), 1); }
+	
+	public static class HasDataMask implements Check {
+		final int mask;
+
+		public HasDataMask(int mask) {
+			this.mask = mask;
+		}
+		
+		@Override
+		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			return map.isDataMaskSet(mask, x, y, z) ? 1 : 0;
+		}
+	}
+	
+	public static Condition hasDataMask(int mask) { return new MinimumCondition(new HasDataMask(mask), 1); }
 	
 	public static class IsEmpty implements Check {
 		@Override
@@ -596,14 +613,20 @@ public class Rule {
 	
 	public static Outcome applyRelative(int dx, int dy, int dz, Rule r) { return new ApplyRelative(r, dx, dy, dz); }
 	
+	public static Outcome createStructure(String name, int[][][] structure, int[][][] structureData, int xOffset, int yOffset, int zOffset, int minSkyLight, int maxSkyLight) {
+		return new CreateStructure(name, structure, structureData, xOffset, yOffset, zOffset, minSkyLight, maxSkyLight);
+	}
+	
 	public static class CreateStructure implements Outcome {
 		final int[][][] structure; // yzx
 		final int[][][] structureData; // yzx
 		final int xOffset, yOffset, zOffset;
 		final int minSkyLight;
 		final int maxSkyLight;
-
-		public CreateStructure(int[][][] structure, int[][][] structureData, int xOffset, int yOffset, int zOffset, int minSkyLight, int maxSkyLight) {
+		final String name;
+		
+		public CreateStructure(String name, int[][][] structure, int[][][] structureData, int xOffset, int yOffset, int zOffset, int minSkyLight, int maxSkyLight) {
+			this.name = name;
 			this.structure = structure;
 			this.structureData = structureData;
 			this.xOffset = xOffset;
@@ -615,52 +638,76 @@ public class Rule {
 		
 		@Override
 		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
-			//System.out.println("Attempting to create structure.");
-			// Check if we can place it.
-			for (int sy = 0; sy < structure.length; sy++) {
-				for (int sz = 0; sz < structure[sy].length; sz++) {
-					for (int sx = 0; sx < structure[sy][sz].length; sx++) {
-						int lx = x + sx + xOffset;
-						int ly = y + sy + yOffset;
-						int lz = z + sz + zOffset;
-						if (structure[sy][sz][sx] != -1) {
-							if (map.getBlockType(lx, ly, lz) != Types.Air) {
-								//System.out.println("Failed due to block in the way.");
-								return false;
-							}
-							if (minSkyLight > 0 && map.getSkyLight(lx, ly, lz) < minSkyLight) {
-								//System.out.println("Failed due to not bright enough.");
-								return false;
-							}
-							if (maxSkyLight < 15 && map.getSkyLight(lx, ly, lz) > maxSkyLight) {
-								//System.out.println("Failed due to too bright.");
-								return false;
+			try {
+				//System.out.println("Attempting to create structure.");
+				// Check if we can place it.
+				for (int sy = 0; sy < structure.length; sy++) {
+					for (int sz = 0; sz < structure[sy].length; sz++) {
+						for (int sx = 0; sx < structure[sy][sz].length; sx++) {
+							int lx = x + sx + xOffset;
+							int ly = y + sy + yOffset;
+							int lz = z + sz + zOffset;
+							if (structure[sy][sz][sx] != -1) {
+								if (map.getBlockType(lx, ly, lz) != Types.Air) {
+									//System.out.println("Failed due to block in the way.");
+									return false;
+								}
+								if (minSkyLight > 0 && map.getSkyLight(lx, ly, lz) < minSkyLight) {
+									//System.out.println("Failed due to not bright enough.");
+									return false;
+								}
+								if (maxSkyLight < 15 && map.getSkyLight(lx, ly, lz) > maxSkyLight) {
+									//System.out.println("Failed due to too bright.");
+									return false;
+								}
 							}
 						}
 					}
 				}
-			}
-			for (int sy = 0; sy < structure.length; sy++) {
-				for (int sz = 0; sz < structure[sy].length; sz++) {
-					for (int sx = 0; sx < structure[sy][sz].length; sx++) {
-						int lx = x + sx + xOffset;
-						int ly = y + sy + yOffset;
-						int lz = z + sz + zOffset;
-						if (structure[sy][sz][sx] != -1) {
-							if (Rules.checkTileEntity[map.getBlockType(sx, sy, sz) + 1]) {
-								map.clearTileEntity(sx, sy, sz);
+				for (int sy = 0; sy < structure.length; sy++) {
+					for (int sz = 0; sz < structure[sy].length; sz++) {
+						for (int sx = 0; sx < structure[sy][sz].length; sx++) {
+							int lx = x + sx + xOffset;
+							int ly = y + sy + yOffset;
+							int lz = z + sz + zOffset;
+							if (structure[sy][sz][sx] != -1) {
+								if (Rules.checkTileEntity[map.getBlockType(sx, sy, sz) + 1]) {
+									map.clearTileEntity(sx, sy, sz);
+								}
+								map.setBlockType((byte) structure[sy][sz][sx], lx, ly, lz);
+								//System.out.println("Placed " + structure[sy][sz][sx]);
 							}
-							map.setBlockType((byte) structure[sy][sz][sx], lx, ly, lz);
-							//System.out.println("Placed " + structure[sy][sz][sx]);
-						}
-						if (structureData != null && structureData[sy][sz][sx] != -1) {
-							map.setData((byte) structureData[sy][sz][sy], lx, ly, lz);
+							if (structureData != null && structureData[sy][sz][sx] != -1) {
+								map.setData((byte) structureData[sy][sz][sx], lx, ly, lz);
+							}
 						}
 					}
 				}
+
+				return true;
+			} catch (Exception e) {
+				throw new RuntimeException("Could not create " + name, e);
 			}
-			
-			return true;
+		}
+	}
+	
+	public static Outcome tryInAnyOrder(Outcome... os) { return new TryAnyInOrder(os); }
+	
+	public static class TryAnyInOrder implements Outcome {
+		Outcome[] os;
+
+		public TryAnyInOrder(Outcome[] os) {
+			this.os = os;
+		}
+
+		@Override
+		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			List<Outcome> outs = Arrays.asList(os);
+			Collections.shuffle(outs, r);
+			for (Outcome o : outs) {
+				if (o.perform(x, y, z, map, r, ac)) { return true; }
+			}
+			return false;
 		}
 	}
 }

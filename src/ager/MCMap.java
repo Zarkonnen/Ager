@@ -180,6 +180,11 @@ public class MCMap {
 		}
 	}
 	
+	public boolean isDataMaskSet(int mask, int x, int y, int z) {
+		int d = getData(x, y, z);
+		return (d & mask) == mask;
+	}
+	
 	public int getData(int x, int y, int z) {
 		MCAFile f = files.get(fileC(x), fileC(z));
 		if (f == null) { return -1; }

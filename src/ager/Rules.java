@@ -672,7 +672,7 @@ public class Rules {
 		
 		// Spawning spawners
 		secondRule().desc("Spawning a spawner.").
-				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(new CreateStructure(SPAWNER, null, -2, 1, -2, 0, 0)).
+				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(createStructure("spawner", SPAWNER, null, -2, 1, -2, 0, 0)).
 				then(new Outcome()
 		{
 			@Override
@@ -692,8 +692,35 @@ public class Rules {
 		});
 		
 		// Spawning trees.
-		secondRule().desc("Spawning a tree.").
-				p(0.7).when(is(Sapling)).then(become(Air)).then(new CreateStructure(TREE_6X5X5, null, -2, 0, -2, 8, 15));
+		secondRule().desc("Spawning an oak tree.").
+				p(0.7).when(is(Sapling)).when(hasData(Oak)).then(become(Air)).then(tryInAnyOrder(
+				createStructure("oak5", OAK_5, null, -6, 0, -6, 8, 15),
+				createStructure("oak4", OAK_4, null, -5, 0, -5, 8, 15),
+				createStructure("oak3", OAK_3, null, -4, 0, -4, 8, 15),
+				createStructure("oak2", OAK_2, null, -4, 0, -4, 8, 15),
+				createStructure("oak1", OAK_1, null, -2, 0, -2, 8, 15)
+		));
+		
+		secondRule().desc("Spawning a spruce tree.").
+				p(0.7).when(is(Sapling)).when(hasData(Spruce)).then(become(Air)).then(tryInAnyOrder(
+				createStructure("spruce1", SPRUCE_1, SPRUCE_1_DATA, -3, 0, -3, 8, 15),
+				createStructure("spruce2", SPRUCE_2, SPRUCE_2_DATA, -3, 0, -5, 3, 15),
+				createStructure("spruce3", SPRUCE_3, SPRUCE_3_DATA, -3, 0, -3, 8, 15)
+		));
+		
+		secondRule().desc("Spawning a birch tree.").
+				p(0.7).when(is(Sapling)).when(hasData(Birch)).then(become(Air)).then(tryInAnyOrder(
+				createStructure("birch1", BIRCH_1, BIRCH_1_DATA, -4, 0, -4, 8, 15),
+				createStructure("birch2", BIRCH_2, BIRCH_2_DATA, -4, 0, -4, 3, 15)
+		));
+		
+		secondRule().desc("Spawning a jungle tree.").
+				p(0.7).when(is(Sapling)).when(hasData(Jungle)).then(become(Air)).then(tryInAnyOrder(
+				createStructure("jungle1", Jungle1.JUNGLE_1, Jungle1Data.JUNGLE_1_DATA, -7, 0, -7, 8, 15),
+				createStructure("jungle2", Jungle2.DATA, Jungle2Data.DATA, -7, 0, -7, 3, 15),
+				createStructure("jungle3", Jungle3.DATA, Jungle3Data.DATA, -7, 0, -7, 3, 15),
+				createStructure("jungle4", Jungle4.BLOCKS, Jungle4.DATA, -4, 0, -4, 3, 15)
+		));
 		
 		// Detaching
 		secondRule().desc("North torches despawning.").

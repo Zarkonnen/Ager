@@ -61,6 +61,8 @@ public class Ager {
 								ac.knownX = x;
 								ac.knownY = y;
 								ac.knownZ = z;
+								/*TreeScanner.run(x, y, z, m);
+								if (2 * 2 == 4) { continue; }*/
 								if (phase == APPLY_RULES) {
 									boolean changed = false;
 									if (Rules.ruleTypes[ac.type + 1]) {
