@@ -475,7 +475,7 @@ public class Rules {
 		rule().desc("Mossy cobble weathering.").
 				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Grass growth.").
-				p(1).when(is(Dirt)).when(nextTo(Grass)).then(become(Grass));
+				p(1).when(is(Dirt)).when(nextTo(Grass)).when(below(Air)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
 				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.003, Air)).then(become(Air));
 		rule().desc("Gravel turning into soil.").

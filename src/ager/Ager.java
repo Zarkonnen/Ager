@@ -18,6 +18,13 @@ public class Ager {
 		
 		MCMap m = new MCMap(new File(args[0]));
 		
+		//m.levelDat.print();
+		m.resetLevelData();
+		//m.setGameType(0, false);
+		//m.makePlayerAdventurer(m.getPlayer(), r);
+		//.levelDat.print();
+		m.makePlayersAdventurers(r);
+		
 		//System.out.println(m.levelDat.findTagByName("Time").getValue());
 		
 		m.calcSupport(false); //qqDPS EXTREME GRAVITYS

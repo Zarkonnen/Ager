@@ -1,29 +1,34 @@
 package ager;
 
+import com.jcraft.jzlib.GZIPInputStream;
+import com.jcraft.jzlib.GZIPOutputStream;
 import java.awt.Point;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Random;
 import unknown.Tag;
 
 public class MCMap {
 	public final CoordMap<MCAFile> files = new CoordMap<MCAFile>();
 	private final File worldF;
-	//public final Tag levelDat;
+	public final Tag levelDat;
 
 	public MCMap(File worldF) throws FileNotFoundException, IOException {
 		this.worldF = worldF;
 		
-		/*FileInputStream fis = null;
+		InputStream fis = null;
 		try {
-			fis = new FileInputStream(new File(worldF, "level.dat"));
+			fis = new GZIPInputStream(new FileInputStream(new File(worldF, "level.dat")));
 			levelDat = Tag.readFrom(fis);
 		} finally {
 			fis.close();
-		}*/
+		}
 		
 		for (File f : new File(worldF, "region").listFiles()) {
 			if (f.getName().endsWith(".mca")) {
@@ -49,19 +54,152 @@ public class MCMap {
 		}
 	}
 	
+	public void killPlayers() {
+		Tag pl = getPlayer();
+		if (pl != null) {
+			killPlayer(pl);
+		}
+		for (File f : new File(worldF, "players").listFiles()) {
+			if (f.getName().endsWith(".dat")) {
+				try {
+					GZIPInputStream gis = new GZIPInputStream(new FileInputStream(f));
+					Tag t = Tag.readFrom(gis);
+					gis.close();
+					killPlayer(t);
+					GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(f));
+					t.writeTo(gos);
+					gos.flush();
+					gos.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void makePlayersAdventurers(Random r) {
+		Tag pl = getPlayer();
+		if (pl != null) {
+			makePlayerAdventurer(pl, r);
+		}
+		for (File f : new File(worldF, "players").listFiles()) {
+			if (f.getName().endsWith(".dat")) {
+				try {
+					GZIPInputStream gis = new GZIPInputStream(new FileInputStream(f));
+					Tag t = Tag.readFrom(gis);
+					gis.close();
+					makePlayerAdventurer(t, r);
+					GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(f));
+					t.writeTo(gos);
+					gos.flush();
+					gos.close();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	public void killPlayer(Tag player) {
+		player.findTagByName("SleepTimer").setValue(Short.valueOf("0"));
+		player.findTagByName("HurtTime").setValue(Short.valueOf("0"));
+		player.findTagByName("XpLevel").setValue(Integer.valueOf("0"));
+		player.findTagByName("Health").setValue(Short.valueOf("20"));
+		player.findTagByName("Dimension").setValue(Integer.valueOf("0"));
+		player.findTagByName("Air").setValue(Short.valueOf("0"));
+		player.findTagByName("Inventory").clearList();
+		int myX = (Integer) levelDat.findTagByName("SpawnX").getValue();
+		int myY = (Integer) levelDat.findTagByName("SpawnY").getValue();
+		int myZ = (Integer) levelDat.findTagByName("SpawnZ").getValue();
+		System.out.println(myY);
+		while (getBlockType(myX, myY, myZ) > Types.Air || getBlockType(myX, myY + 1, myZ) > Types.Air) { myY++; }
+		System.out.println(myY);
+		((Tag[]) player.findTagByName("Pos").getValue())[0].setValue(Double.valueOf(myX));
+		((Tag[]) player.findTagByName("Pos").getValue())[1].setValue(Double.valueOf(myY + 1.7));
+		((Tag[]) player.findTagByName("Pos").getValue())[2].setValue(Double.valueOf(myZ));
+		player.findTagByName("Sleeping").setValue(Byte.valueOf("0"));
+		player.findTagByName("Fire").setValue(Short.valueOf("-20"));
+		player.findTagByName("foodLevel").setValue(Integer.valueOf("20"));
+		player.findTagByName("XpTotal").setValue(Integer.valueOf("0"));
+		player.findTagByName("XpP").setValue(Float.valueOf("0"));
+	}
+	
+	public void makePlayerAdventurer(Tag player, Random r) {
+		killPlayer(player);
+		int[][] adv = Adventurers.ALL[r.nextInt(Adventurers.ALL.length)];
+		for (int i = 0; i < adv.length; i++) {
+			Tag eq = new Tag(Tag.Type.TAG_Compound, null, new Tag[] {
+				new Tag(Tag.Type.TAG_Short, "id", Short.valueOf((short) adv[i][0])),
+				new Tag(Tag.Type.TAG_Short, "Damage", Short.valueOf((short) adv[i][1])),
+				new Tag(Tag.Type.TAG_Byte, "Count", Byte.valueOf((byte) adv[i][2])),
+				new Tag(Tag.Type.TAG_Byte, "Slot", Byte.valueOf((byte) adv[i][3])),
+				new Tag(Tag.Type.TAG_End, null, null)
+			});
+			if (adv[i].length > 4) {
+				switch (adv[i][4]) {
+					case 1: // Aqua helmet
+						eq.addTag(new Tag(Tag.Type.TAG_Compound, "tag", new Tag[] {
+							new Tag(Tag.Type.TAG_List, "ench", new Tag[] {
+								new Tag(Tag.Type.TAG_Compound, null, new Tag[] {
+									new Tag(Tag.Type.TAG_Short, "id", Short.valueOf("5")), // respiration
+									new Tag(Tag.Type.TAG_Short, "lvl", Short.valueOf("3")),
+									new Tag(Tag.Type.TAG_End, null, null)
+								}),
+								new Tag(Tag.Type.TAG_Compound, null, new Tag[] {
+									new Tag(Tag.Type.TAG_Short, "id", Short.valueOf("6")), // aqua affinity
+									new Tag(Tag.Type.TAG_Short, "lvl", Short.valueOf("1")),
+									new Tag(Tag.Type.TAG_End, null, null)
+								})
+							}),
+							new Tag(Tag.Type.TAG_End, null, null)
+						}));
+						break;
+					case 2: // Mountaineer shoes
+						eq.addTag(new Tag(Tag.Type.TAG_Compound, "tag", new Tag[] {
+							new Tag(Tag.Type.TAG_List, "ench", new Tag[] {
+								new Tag(Tag.Type.TAG_Compound, null, new Tag[] {
+									new Tag(Tag.Type.TAG_Short, "id", Short.valueOf("2")), // feather falling
+									new Tag(Tag.Type.TAG_Short, "lvl", Short.valueOf("4")),
+									new Tag(Tag.Type.TAG_End, null, null)
+								})
+							}),
+							new Tag(Tag.Type.TAG_End, null, null)
+						}));
+						break;
+				}
+			}
+			player.findTagByName("Inventory").addTag(eq);
+		}
+	}
+	
+	public Tag getPlayer() {
+		return levelDat.findTagByName("Player");
+	}
+	
+	public void resetLevelData() {
+		levelDat.findTagByName("raining").setValue(Byte.valueOf((byte) 0));
+		levelDat.findTagByName("thundering").setValue(Byte.valueOf((byte) 0));
+		levelDat.findTagByName("Time").setValue(Long.valueOf((long) 0));
+	}
+	
+	public void setGameType(int type, boolean hardcore) {
+		levelDat.findTagByName("GameType").setValue(Integer.valueOf(type));
+		levelDat.findTagByName("hardcore").setValue(hardcore ? (byte) 1 : (byte) 0);
+	}
+	
 	public void writeAndClose() throws IOException {
 		for (MCAFile f : files) {
 			f.writeAndClose();
 		}
 		
-		/*FileOutputStream fos = null;
+		OutputStream fos = null;
 		try {
-			fos = new FileOutputStream(new File(worldF, "level.dat"));
+			fos = new GZIPOutputStream(new FileOutputStream(new File(worldF, "level.dat")));
 			levelDat.writeTo(fos);
 		} finally {
 			fos.flush();
 			fos.close();
-		}*/
+		}
 	}
 	
 	static int fileC(int c) {
