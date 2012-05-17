@@ -48,9 +48,9 @@ public class Rules {
 	
 	static {
 		for (int i = 0; i < 1024; i++) {
-			support[i] = 6;
+			support[i] = 8;
 			maxSupport[i] = 100;
-			weight[i] = 25;
+			weight[i] = 30;
 		}
 	}
 	
@@ -122,7 +122,7 @@ public class Rules {
 	}
 	
 	static {
-		// default is sup 6 wt 25 max 100
+		// default is sup 8 wt 30 max 100
 		mat(Air, 0, 0, 0);
 		mat(Water, 0, 60);
 		mat(Lava, 100, 70, 0);

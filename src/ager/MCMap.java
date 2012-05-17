@@ -18,6 +18,7 @@ public class MCMap {
 	public final CoordMap<MCAFile> files = new CoordMap<MCAFile>();
 	private final File worldF;
 	public final Tag levelDat;
+	public final Tag levelDatOld;
 
 	public MCMap(File worldF) throws FileNotFoundException, IOException {
 		this.worldF = worldF;
@@ -26,6 +27,18 @@ public class MCMap {
 		try {
 			fis = new GZIPInputStream(new FileInputStream(new File(worldF, "level.dat")));
 			levelDat = Tag.readFrom(fis);
+		} finally {
+			fis.close();
+		}
+		
+		fis = null;
+		try {
+			if (new File(worldF, "level.dat_old").exists()) {
+				fis = new GZIPInputStream(new FileInputStream(new File(worldF, "level.dat_old")));
+				levelDatOld = Tag.readFrom(fis);
+			} else {
+				levelDatOld = null;
+			}
 		} finally {
 			fis.close();
 		}
@@ -111,9 +124,7 @@ public class MCMap {
 		int myX = (Integer) levelDat.findTagByName("SpawnX").getValue();
 		int myY = (Integer) levelDat.findTagByName("SpawnY").getValue();
 		int myZ = (Integer) levelDat.findTagByName("SpawnZ").getValue();
-		System.out.println(myY);
 		while (getBlockType(myX, myY, myZ) > Types.Air || getBlockType(myX, myY + 1, myZ) > Types.Air) { myY++; }
-		System.out.println(myY);
 		((Tag[]) player.findTagByName("Pos").getValue())[0].setValue(Double.valueOf(myX));
 		((Tag[]) player.findTagByName("Pos").getValue())[1].setValue(Double.valueOf(myY + 1.7));
 		((Tag[]) player.findTagByName("Pos").getValue())[2].setValue(Double.valueOf(myZ));
@@ -179,12 +190,21 @@ public class MCMap {
 	public void resetLevelData() {
 		levelDat.findTagByName("raining").setValue(Byte.valueOf((byte) 0));
 		levelDat.findTagByName("thundering").setValue(Byte.valueOf((byte) 0));
-		levelDat.findTagByName("Time").setValue(Long.valueOf((long) 0));
+		levelDat.findTagByName("Time").setValue(Long.valueOf((long) 1776562l));
+		if (levelDatOld != null) {
+			levelDatOld.findTagByName("raining").setValue(Byte.valueOf((byte) 0));
+			levelDatOld.findTagByName("thundering").setValue(Byte.valueOf((byte) 0));
+			levelDatOld.findTagByName("Time").setValue(Long.valueOf((long) 1776562l));
+		}
 	}
 	
 	public void setGameType(int type, boolean hardcore) {
 		levelDat.findTagByName("GameType").setValue(Integer.valueOf(type));
 		levelDat.findTagByName("hardcore").setValue(hardcore ? (byte) 1 : (byte) 0);
+		if (levelDatOld != null) {
+			levelDatOld.findTagByName("GameType").setValue(Integer.valueOf(type));
+			levelDatOld.findTagByName("hardcore").setValue(hardcore ? (byte) 1 : (byte) 0);
+		}
 	}
 	
 	public void writeAndClose() throws IOException {
@@ -196,6 +216,17 @@ public class MCMap {
 		try {
 			fos = new GZIPOutputStream(new FileOutputStream(new File(worldF, "level.dat")));
 			levelDat.writeTo(fos);
+		} finally {
+			fos.flush();
+			fos.close();
+		}
+		
+		fos = null;
+		try {
+			if (levelDatOld != null) {
+				fos = new GZIPOutputStream(new FileOutputStream(new File(worldF, "level.dat_old")));
+				levelDatOld.writeTo(fos);
+			}
 		} finally {
 			fos.flush();
 			fos.close();

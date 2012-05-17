@@ -161,7 +161,7 @@ public class Chunk {
 	static final int[] DX = { 0,  0,  0, -1,  1, -1, -1, -1,  0,  0,  1,  1,  1,  0,  0,  0, -1,  1};
 	static final int[] DY = {-1, -1, -1, -1, -1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1};
 	static final int[] DZ = { 0, -1,  1,  0,  0, -1,  0,  1, -1,  1, -1,  0,  1,  0, -1,  1,  0,  0};
-	static final int[] SC = { 2,  2,  2,  2,  2,  4,  1,  4,  1,  1,  4,  1,  4,  0,  2,  2,  2,  2};
+	static final int[] SC = { 2,  3,  3,  3,  3,  5,  1,  5,  1,  1,  5,  1,  5,  0,  3,  3,  3,  3};
 	
 	public void newFloodFill() {
 		/*if (2 * 2 == 4) { // qqDPS
@@ -228,7 +228,7 @@ public class Chunk {
 		for (int y = 0; y < 16; y++) {
 			if (sections[y] != null) {
 				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("BlockLight").getValue(), 0, 2048);
-				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("SkyLight").getValue(), 0, 2048);
+				System.arraycopy(empty, 0, (byte[]) sections[y].findTagByName("SkyLight").getValue(), 0, 2048); // qqDPS
 			}
 		}
 	}
@@ -407,26 +407,26 @@ public class Chunk {
 					int zInOtherChunk = (nz + 16) % 16;
 					
 					int localType = targetChunk.getBlockType(xInOtherChunk, ny, zInOtherChunk);
-					if (!Rules.transparent[localType + 1]) { continue; }
+					//if (!Rules.transparent[localType + 1]) { continue; } // qqDPS
 					int localL = targetChunk.getSkyLight(xInOtherChunk, ny, zInOtherChunk);
 					if (localL == -1) { continue; } // There is no block there.
 					int newLight = lightQ.l - Rules.extraLightAttenuation[localType + 1];
 					if (newLight <= 0) { continue; }
 					if (localL >= newLight) { continue; } // It's already as bright or brighter than we can make it.
 					targetChunk.setSkyLight((byte) newLight, xInOtherChunk, ny, zInOtherChunk);
-					if (newLight > 1) {
+					if (newLight > 1 && Rules.transparent[localType + 1]) { // qqDPS
 						targetChunk.lightQ.push(xInOtherChunk, ny, zInOtherChunk, newLight - 1);
 					}
 				} else {
 					int localType = getBlockType(nx, ny, nz);
-					if (!Rules.transparent[localType + 1]) { continue; }
+					//if (!Rules.transparent[localType + 1]) { continue; }
 					int localL = getSkyLight(nx, ny, nz);
 					if (localL == -1) { continue; } // There is no block there.
 					int newLight = lightQ.l - Rules.extraLightAttenuation[localType + 1];
 					if (newLight <= 0) { continue; }
 					if (localL >= newLight) { continue; } // It's already as bright or brighter than we can make it.
 					setSkyLight((byte) newLight, nx, ny, nz);
-					if (newLight > 1) {
+					if (newLight > 1 && Rules.transparent[localType + 1]) {
 						lightQ.push(nx, ny, nz, newLight - 1);
 					}
 				}

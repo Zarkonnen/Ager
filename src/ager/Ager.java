@@ -19,6 +19,7 @@ public class Ager {
 		MCMap m = new MCMap(new File(args[0]));
 		
 		//m.levelDat.print();
+		m.levelDat.print();
 		m.resetLevelData();
 		//m.setGameType(0, false);
 		//m.makePlayerAdventurer(m.getPlayer(), r);
