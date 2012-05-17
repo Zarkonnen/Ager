@@ -14,21 +14,46 @@ public class Ager {
 	public static final int APPLY_SECONDARY_RULES = 3;
 	
 	public static void main(String[] args) throws Exception {
+		if (args.length == 0) {
+			System.out.println("Usage:");
+			System.out.println("java -Xmx4000m -jar Ager.jar <path to world folder> [number of iterations] [options]");
+			System.out.println("Options are in key=value format. Available options:");
+			System.out.println("gamemode=survival|hardcore|creative");
+			System.out.println("players=keep|reset|explorers");
+		}
+		
 		Random r = new Random();
 		
 		MCMap m = new MCMap(new File(args[0]));
 		
-		//m.levelDat.print();
-		m.levelDat.print();
 		m.resetLevelData();
-		//m.setGameType(0, false);
-		//m.makePlayerAdventurer(m.getPlayer(), r);
-		//.levelDat.print();
-		m.makePlayersAdventurers(r);
+		
+		for (int i = 2; i < args.length; i++) {
+			String k = args[i].split("=", 2)[0];
+			String v = args[i].split("=", 2)[1];
+			if (k.equals("gamemode")) {
+				if (v.equals("survival")) {
+					m.setGameType(0, false);
+				}
+				if (v.equals("hardcore")) {
+					m.setGameType(0, true);
+				}
+				if (v.equals("creative")) {
+					m.setGameType(1, false);
+				}
+			}
+			if (k.equals("players")) {
+				if (v.equals("reset")) {
+					m.killPlayers();
+				}
+				if (v.equals("explorers")) {
+					m.makePlayersAdventurers(r);
+				}
+			}
+		}
 		
 		//System.out.println(m.levelDat.findTagByName("Time").getValue());
 		
-		m.calcSupport(false); //qqDPS EXTREME GRAVITYS
 		IntPt4Stack lightQ = new IntPt4Stack(2048);
 		
 		int iters = args.length > 1 ? Integer.parseInt(args[1]) : 1;
@@ -36,6 +61,7 @@ public class Ager {
 		for (int lp = 0; lp < loops; lp++) {
 			final int phase = lp % 4;
 			final int iter = lp / 4;
+			System.out.println("Round " + (iter + 1) + ", phase " + (phase + 1));
 			final boolean nextToFinalIter = iter == iters - 2;
 			final boolean finalIter = iter == iters - 1;
 			final boolean tenthIter = iter % 10 == 0;
@@ -69,8 +95,6 @@ public class Ager {
 								ac.knownX = x;
 								ac.knownY = y;
 								ac.knownZ = z;
-								/*TreeScanner.run(x, y, z, m);
-								if (2 * 2 == 4) { continue; }*/
 								if (phase == APPLY_RULES) {
 									boolean changed = false;
 									if (Rules.ruleTypes[ac.type + 1]) {
@@ -86,8 +110,7 @@ public class Ager {
 								}
 								if (phase == FALL && doExtendedPhase) {
 									if (ac.type > Types.Air &&
-										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1]/* &&
-										f.chunks[zBlock][xBlock].wasSupported.get(y * 256 + lz * 16 + lx)*/)
+										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1])
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
 									} else {
