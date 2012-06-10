@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.LinkedList;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import unknown.Tag;
 
@@ -14,8 +14,9 @@ public class MCAFile {
 	public final int zOffset;
 	public final Chunk[][] chunks = new Chunk[32][32];
 	private RegionFile rf;
+	private PooledPagingByteArray.Pool pool = new PooledPagingByteArray.Pool();
 	
-	public MCAFile(File regions, int xOffset, int zOffset) throws FileNotFoundException, IOException {
+	public MCAFile(File regions, int xOffset, int zOffset, LinkedList<Chunk> loadedChunkCache, int maxChunksLoaded) throws FileNotFoundException, IOException {
 		file = new File(regions, "r." + xOffset + "." + zOffset + ".mca");
 		this.xOffset = xOffset;
 		this.zOffset = zOffset;
@@ -24,7 +25,7 @@ public class MCAFile {
 			for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 				InputStream is = rf.getChunkDataInputStream(x, z);
 				if (is != null) {
-					chunks[z][x] = new Chunk(is, x + xOffset * 32, z + zOffset * 32);
+					chunks[z][x] = new Chunk(rf, x, z, x + xOffset * 32, z + zOffset * 32, loadedChunkCache, maxChunksLoaded, pool);
 					is.close();
 				}
 			}}
@@ -46,37 +47,14 @@ public class MCAFile {
 	public void writeAndClose() throws IOException {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
-				OutputStream os = rf.getChunkDataOutputStream(x, z);
+				/*OutputStream os = rf.getChunkDataOutputStream(x, z);
 				chunks[z][x].t.writeTo(os);
 				os.flush();
-				os.close();
+				os.close();*/
+				chunks[z][x].save();
 			}
 		}}
 		if (rf != null) { rf.close(); }
-	}
-	
-	public void initSupport(boolean postRun) {
-		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
-			if (chunks[z][x] != null) {
-				chunks[z][x].initSupport(postRun);
-			}
-		}}
-	}
-	
-	public boolean finishSupport(boolean postRun) {
-		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
-			if (chunks[z][x] != null) {
-				chunks[z][x].floodFill(postRun);
-			}
-		}}
-			
-		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
-			if (chunks[z][x] != null && !chunks[z][x].q.isEmpty()) {
-				return false;
-			}
-		}}
-			
-		return true;
 	}
 	
 	public void newInitSupport() {

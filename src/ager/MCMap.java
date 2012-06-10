@@ -10,7 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Random;
 import unknown.Tag;
 
@@ -19,9 +19,14 @@ public class MCMap {
 	private final File worldF;
 	public final Tag levelDat;
 	public final Tag levelDatOld;
+	public int maxChunksLoaded;
+	
+	public final LinkedList<Chunk> loadedChunkCache = new LinkedList<Chunk>();
 
-	public MCMap(File worldF) throws FileNotFoundException, IOException {
+	public MCMap(File worldF, int maxChunksLoaded) throws FileNotFoundException, IOException {
 		this.worldF = worldF;
+		this.maxChunksLoaded = maxChunksLoaded;
+		System.out.println(maxChunksLoaded);
 		
 		InputStream fis = null;
 		try {
@@ -48,7 +53,7 @@ public class MCMap {
 				String[] bits = f.getName().split("[.]");
 				int x = Integer.parseInt(bits[1]);
 				int z = Integer.parseInt(bits[2]);
-				files.put(x, z, new MCAFile(new File(worldF, "region"), x, z));
+				files.put(x, z, new MCAFile(new File(worldF, "region"), x, z, loadedChunkCache, maxChunksLoaded));
 			}
 		}
 		for (MCAFile f : files) {
@@ -237,24 +242,26 @@ public class MCMap {
 		return c < 0 ? ((c + 1) / 512 - 1) : c / 512;
 	}
 	
-	static Point fileP(int x, int y, int z) {
-		return new Point(fileC(x), fileC(z));
-	}
-	
 	static int rem(int c) {
 		return c - fileC(c) * 512;
+	}
+	
+	static int blockChunkRem(int c) {
+		return (c - fileC(c) * 512) / 16;
 	}
 	
 	static int chunkFileC(int c) {
 		return c < 0 ? ((c + 1) / 32 - 1) : c / 32;
 	}
 	
-	static Point chunkFileP(int x, int z) {
-		return new Point(chunkFileC(x), chunkFileC(z));
-	}
-	
 	static int chunkRem(int c) {
 		return c - chunkFileC(c) * 32;
+	}
+	
+	public final Chunk getChunkForBlock(int blockX, int blockZ) {
+		MCAFile f = files.get(fileC(blockX), fileC(blockZ));
+		if (f == null) { return null; }
+		return f.getChunk(blockChunkRem(blockX), blockChunkRem(blockZ));
 	}
 	
 	public final Chunk getChunk(int chunkX, int chunkZ) {
@@ -311,24 +318,6 @@ public class MCMap {
 			max = Math.max(getSkyLight(x + dx, y + dy, z + dz), max);
 		}}}
 		setSkyLight((byte) max, x, y, z);
-	}
-	
-	public void calcSupport(boolean postRun) {
-		for (MCAFile f : files) {
-			f.initSupport(postRun);
-		}
-		
-		int pass = 1;
-		lp: while (true) {
-			System.out.println("FinishSupport pass " + pass++);
-			for (MCAFile f : files) {
-				if (!f.finishSupport(postRun)) {
-					continue lp;
-				}
-			}
-			
-			return;
-		}
 	}
 	
 	public void newCalcSupport() {
@@ -425,6 +414,7 @@ public class MCMap {
 	static final int[] NS_Z = { 0, 0,-1, 1, 0, 0 };
 	
 	public void floodBlockLight(int x, int y, int z, IntPt4Stack q) {
+		getChunkForBlock(x, z).prepare();
 		int type = getBlockType(x, y, z);
 		int l = Rules.lightFrom[type + 1];
 		if (l <= 0) { return; }
@@ -437,6 +427,9 @@ public class MCMap {
 				int nx = q.x + NS_X[j];
 				int ny = q.y + NS_Y[j];
 				int nz = q.z + NS_Z[j];
+				Chunk ch = getChunkForBlock(nx, nz);
+				if (ch == null) { continue; }
+				ch.prepare();
 				int localType = getBlockType(nx, ny, nz);
 				if (!Rules.transparent[localType + 1]) { /*System.out.println("solid " + localType);*/ continue; }
 				int localL = getBlockLight(nx, ny, nz);
@@ -470,23 +463,19 @@ public class MCMap {
 	}
 	
 	public void doFlow(int x, int y, int z) {
-		int startLevel = getData(x, y, z);
-		/*if (startLevel != 0) {
-			return;
-		}*/
-		/*int startType = getBlockType(x, y, z);
-		System.out.println(startType);*/
 		IntPt3Stack flowQ = new IntPt3Stack(10);
 		flowQ.push(x, y, z);
 		while (!flowQ.isEmpty()) {
 			flowQ.pop();
+			
+			Chunk ch = getChunkForBlock(flowQ.x, flowQ.z);
+			if (ch == null) { continue; }
+			ch.prepare();
 			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
 			int level = getData(flowQ.x, flowQ.y, flowQ.z);
-			//System.out.println("type " + type + " level " + level + " x " + flowQ.x + " y " + flowQ.y + " z " + flowQ.z);
 			boolean isSource = level == 0;
 			
 			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
-			//int belowLevel = getData(flowQ.x, flowQ.y - 1, flowQ.z);
 			boolean hasBottom = belowType != type && belowType != Types.Air;
 			
 			if (hasBottom || isSource) {
@@ -515,106 +504,4 @@ public class MCMap {
 			}
 		}
 	}
-	
-	/*public void doFlow2(int x, int y, int z) {
-		IntPt3Stack flowQ = new IntPt3Stack(10);
-		int startType = getBlockType(x, y, z);
-		if (2 * 2 == 4) { return; }
-		boolean isLava = startType == Types.Lava || startType == Types.Source_Lava;
-		boolean isSource = startType == Types.Source_Lava || startType == Types.Source_Water;
-		flowQ.push(x, y, z);
-		while (!flowQ.isEmpty()) {
-			flowQ.pop();
-			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
-			int amt = getData(flowQ.x, flowQ.y, flowQ.z);
-			if (belowType == Types.Air) {
-				setBlockType((byte) (isLava ? Types.Lava : Types.Water), flowQ.x, flowQ.y - 1, flowQ.z);
-				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
-				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
-				continue;
-			}
-			if (!isSource && !isLava && belowType == Types.Water) {
-				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
-				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
-				if (amt == 8) {
-					continue; // Falling water don't spread!
-				}
-			}
-			if (!isSource && !isLava && belowType == Types.Source_Water) {
-				continue;
-			}
-			if (!isSource && isLava && belowType == Types.Lava) {
-				setData((byte) 8, flowQ.x, flowQ.y - 1, flowQ.z);
-				flowQ.push(flowQ.x, flowQ.y - 1, flowQ.z);
-				if (amt == 8) {
-					continue; // Falling lava don't spread!
-				}
-			}
-			if (!isSource && isLava && belowType == Types.Source_Lava) {
-				continue;
-			}
-
-			int type = getBlockType(flowQ.x, flowQ.y, flowQ.z);
-			int startAmt =
-				type == Types.Source_Lava ? 0 : type == Types.Source_Water ? 0 : amt;
-			if (startAmt == 8) { startAmt = 0; }
-			for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
-				if (dz == 0 && dx == 0) { continue; }
-				if (dz != 0 && dx != 0) { continue; }
-				int nx = flowQ.x + dx;
-				int ny = flowQ.y;
-				int nz = flowQ.z + dz;
-				int t = getBlockType(nx, ny, nz);
-				int newAmt = startAmt + (isLava ? 2 : 1);
-				if (t == Types.Source_Lava) {
-					if (type == Types.Source_Lava || type == Types.Lava) {
-						continue;
-					}
-					if (type == Types.Source_Water || type == Types.Water) {
-						setBlockType((byte) Types.Obsidian, nx, ny, nz);
-						continue;
-					}
-				}
-				if (t == Types.Lava) {
-					int myAmt = getData(nx, ny, nz);
-					if (type == Types.Lava && newAmt >= myAmt) {
-						continue;
-					}
-					if (type == Types.Source_Water || type == Types.Water) {
-						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
-						continue;
-					}
-				}
-				if (t == Types.Source_Water) {
-					if (type == Types.Source_Water || type == Types.Water) {
-						continue;
-					}
-					if (type == Types.Source_Lava) {
-						setBlockType((byte) Types.Obsidian, nx, ny, nz);
-						continue;
-					}
-					if (type == Types.Lava) {
-						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
-						continue;
-					}
-				}
-				if (t == Types.Water) {
-					int myAmt = getData(nx, ny, nz);
-					if (type == Types.Water && newAmt >= myAmt) {
-						continue;
-					}
-					if (type == Types.Source_Lava || type == Types.Lava) {
-						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
-						continue;
-					}
-				}
-				if (newAmt < 8 && (t == Types.Air || t == Types.Water || t == Types.Lava)) {
-					setBlockType((byte) (isLava ? Types.Lava : Types.Water), nx, ny, nz);
-					setData((byte) newAmt, nx, ny, nz);
-					//System.out.println("setting " + amt);
-					flowQ.push(nx, ny, nz);
-				}
-			}}
-		}
-	}*/
 }

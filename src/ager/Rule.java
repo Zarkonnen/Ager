@@ -256,13 +256,36 @@ public class Rule {
 		
 		@Override
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
-			return
-					(map.getBlockType(x - 1, y, z) == type ? 1 : 0) +
-					(map.getBlockType(x + 1, y, z) == type ? 1 : 0) +
-					(map.getBlockType(x, y - 1, z) == type ? 1 : 0) +
-					(map.getBlockType(x, y + 1, z) == type ? 1 : 0) +
-					(map.getBlockType(x, y, z - 1) == type ? 1 : 0) +
-					(map.getBlockType(x, y, z + 1) == type ? 1 : 0);
+			int total = 0;
+			Chunk ch = null;
+			ch = map.getChunkForBlock(x, z);
+			if (ch != null) {
+				ch.prepare();
+				total += map.getBlockType(x, y - 1, z) == type ? 1 : 0;
+				total += map.getBlockType(x, y + 1, z) == type ? 1 : 0;
+			} 
+			ch = map.getChunkForBlock(x - 1, z);
+			if (ch != null) {
+				ch.prepare();
+				total += map.getBlockType(x - 1, y, z) == type ? 1 : 0;
+			}
+			ch = map.getChunkForBlock(x + 1, z);
+			if (ch != null) {
+				ch.prepare();
+				total += map.getBlockType(x + 1, y, z) == type ? 1 : 0;
+				ch.prepare();
+			}
+			ch = map.getChunkForBlock(x, z - 1);
+			if (ch != null) {
+				ch.prepare();
+				total += map.getBlockType(x, y, z - 1) == type ? 1 : 0;
+			}
+			ch = map.getChunkForBlock(x, z + 1);
+			if (ch != null) {
+				ch.prepare();
+				total += map.getBlockType(x, y, z + 1) == type ? 1 : 0;
+			}
+			return total;
 		}
 	}
 	
@@ -283,6 +306,9 @@ public class Rule {
 			int sum = 0;
 			for (int dx = -1; dx < 2; dx++) { for (int dy = -1; dy < 2; dy++) { for (int dz = -1; dz < 2; dz++) {
 				if (dx != 0 && dy != 0 && dz != 0) { continue; }
+				Chunk ch = map.getChunkForBlock(x + dx, z + dz);
+				if (ch == null) { continue; }
+				ch.prepare();
 				if (map.getBlockType(x + dx, y + dy, z + dz) == type) { sum++; }
 			}}}
 			return sum;
@@ -310,6 +336,9 @@ public class Rule {
 			int sum = 0;
 			for (int dx = -dist; dx < dist + 1; dx++) { for (int dy = -dist; dy < dist + 1; dy++) { for (int dz = -dist; dz < dist + 1; dz++) {
 				if (dx != 0 && dy != 0 && dz != 0) { continue; }
+				Chunk ch = map.getChunkForBlock(x + dx, z + dz);
+				if (ch == null) { continue; }
+				ch.prepare();
 				if (map.getBlockType(x + dx, y + dy, z + dz) == type) { sum++; }
 			}}}
 			return sum;
@@ -334,6 +363,9 @@ public class Rule {
 		
 		@Override
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
+			Chunk ch = map.getChunkForBlock(x + dx, z + dz);
+			if (ch == null) { return 0; }
+			ch.prepare();
 			return Rules.providesSupport[map.getBlockType(x + dx, y + dy, z + dz) + 1] ? 1 : 0;
 		}
 	}
@@ -355,6 +387,9 @@ public class Rule {
 		
 		@Override
 		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
+			Chunk ch = map.getChunkForBlock(x, z);
+			if (ch == null) { return false; }
+			ch.prepare();
 			if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
 				map.clearTileEntity(x, y, z);
 			}
@@ -385,6 +420,9 @@ public class Rule {
 	public static Outcome fall() { return new Fall(); }
 	
 	public static void fall(int x, int y, int z, MCMap map, int becomes) {
+		Chunk ch = map.getChunkForBlock(x, z);
+		if (ch == null) { return; }
+		ch.prepare();
 		// how deep can we go?
 		int fallY = y;
 		while (Rules.fallThru[map.getBlockType(x, --fallY, z) + 1] && fallY >= 0) {}
@@ -420,7 +458,8 @@ public class Rule {
 			for (int dx = -1; dx < 2; dx++) { for (int dz = -1; dz < 2; dz++) {
 				if (dx == 0 && dz == 0) { continue; }
 				if (dx != 0 && dz != 0) { continue; }
-				if (map.getChunk((x + dx) / 16, (z + dz) / 16) == null) { continue; } // Don't slide off loaded map!
+				if (map.getChunkForBlock(x + dx, z + dz) == null) { continue; } // Don't slide off loaded map!
+				map.getChunkForBlock(x + dx, z + dz).prepare();
 				int dist = -1;
 				while (Rules.fallThru[map.getBlockType(x + dx, y - ++dist, z + dz) + 1] && (y - dist > 1)) {}
 				dist--;
@@ -463,6 +502,9 @@ public class Rule {
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
 			IntPt3Stack b = ac.getConnectedBlob(x, y, z, types);
 			if (b != null) { return 1; }
+			Chunk ch = map.getChunkForBlock(x, z);
+			if (ch == null) { return 0; }
+			ch.prepare();
 			if (Arrays.binarySearch(types, ac.getType(x, y, z, map)) < 0) { return 0; }
 			if (map.getPartOfBlob(x, y, z)) { return 0; } // Already evaluated this blob.
 			/*System.out.println("Blob found.");
@@ -483,6 +525,9 @@ public class Rule {
 							if (dy != 0 && dx != 0 && dz != 0) { continue; }
 							if (dy == 0 && dx == 0 && dz == 0) { continue; }
 							int nz = q.z + dz;
+							ch = map.getChunkForBlock(nx, nz);
+							if (ch == null) { continue; }
+							ch.prepare();
 							if (Arrays.binarySearch(types, map.getBlockType(nx, ny, nz)) >= 0 && !map.getPartOfBlob(nx, ny, nz)) {
 								//System.out.println(map.getBlockType(nx, ny, nz));
 								blob.push(nx, ny, nz);
@@ -524,6 +569,9 @@ public class Rule {
 			int count = 0;
 			for (int i = 0; i < blob.size(); i++) {
 				blob.get(i);
+				Chunk ch = map.getChunkForBlock(blob.x, blob.z);
+				if (ch == null) { continue; }
+				ch.prepare();
 				if (map.getBlockType(blob.x, blob.y, blob.z) == type) {
 					count++;
 				}
@@ -550,6 +598,9 @@ public class Rule {
 			int count = 0;
 			for (int i = 0; i < blob.size(); i++) {
 				blob.get(i);
+				Chunk ch = map.getChunkForBlock(blob.x, blob.z);
+				if (ch == null) { continue; }
+				ch.prepare();
 				if (map.getData(blob.x, blob.y, blob.z) == data) {
 					count++;
 				}
@@ -573,6 +624,9 @@ public class Rule {
 			if (blob == null) { return false; }
 			for (int i = 0; i < blob.size(); i++) {
 				blob.get(i);
+				Chunk ch = map.getChunkForBlock(blob.x, blob.z);
+				if (ch == null) { return false; }
+				ch.prepare();
 				rule.apply(blob.x, blob.y, blob.z, map, r, ac);
 			}
 			
@@ -682,6 +736,9 @@ public class Rule {
 							int ly = y + sy + yOffset;
 							int lz = z + sz + zOffset;
 							if (structure[sy][sz][sx] != -1) {
+								Chunk ch = map.getChunkForBlock(lx, lz);
+								if (ch == null) { return false; }
+								ch.prepare();
 								if (map.getBlockType(lx, ly, lz) != Types.Air) {
 									//System.out.println("Failed due to block in the way.");
 									return false;
@@ -705,6 +762,9 @@ public class Rule {
 							int ly = y + sy + yOffset;
 							int lz = z + sz + zOffset;
 							if (structure[sy][sz][sx] != -1) {
+								Chunk ch = map.getChunkForBlock(lx, lz);
+								if (ch == null) { return false; }
+								ch.prepare();
 								if (Rules.checkTileEntity[map.getBlockType(sx, sy, sz) + 1]) {
 									map.clearTileEntity(sx, sy, sz);
 								}

@@ -24,7 +24,7 @@ public class Ager {
 		
 		Random r = new Random();
 		
-		MCMap m = new MCMap(new File(args[0]));
+		MCMap m = new MCMap(new File(args[0]), (int) (Math.min(Runtime.getRuntime().maxMemory() / 400000, 100000000)));
 		
 		m.resetLevelData();
 		
@@ -68,14 +68,29 @@ public class Ager {
 			final boolean doExtendedPhase = nextToFinalIter || finalIter || tenthIter;
 			
 			if (phase == APPLY_RULES || phase == APPLY_SECONDARY_RULES) {
+				System.out.println("clearPartOfBlob start");
 				m.clearPartOfBlob();
+				System.out.println("clearPartOfBlob end");
 			}
 			if (phase == FALL && doExtendedPhase) {
+				System.out.println("calcsupport start");
 				m.newCalcSupport();
+				System.out.println("calcsupport end");
 			}
 			if (phase == LIGHTING && doExtendedPhase) {
+				System.out.println("lighting start");
 				m.removeLighting();
 				m.calcSkyLight();
+				System.out.println("lighting end");
+			}
+			
+			for (MCAFile f : m.files) {
+				for (int zBlock = 0; zBlock < 32; zBlock++) {
+					for (int xBlock = 0; xBlock < 32; xBlock++) {
+						if (f.chunks[zBlock][xBlock] == null) { continue; }
+						f.chunks[zBlock][xBlock].processed = false;
+					}
+				}
 			}
 			
 			int fi = 0;
@@ -84,9 +99,14 @@ public class Ager {
 				for (int zBlock = 0; zBlock < 32; zBlock++) {
 					for (int xBlock = 0; xBlock < 32; xBlock++) {
 						if (f.chunks[zBlock][xBlock] == null) { continue; }
+						for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
+							Chunk ch = m.getChunk(xBlock + f.xOffset, zBlock + f.zOffset);
+							if (ch != null) { ch.prepare(); }
+						}}
+						//f.chunks[zBlock][xBlock].prepare();
 						for (int ySection = 0; ySection < 16; ySection++) {
-							if (f.chunks[zBlock][xBlock].sections[ySection] == null) { continue; }
-							byte[] sectionData = (byte[]) f.chunks[zBlock][xBlock].sections[ySection].findTagByName("Blocks").getValue();
+							if (f.chunks[zBlock][xBlock].sections()[ySection] == null) { continue; }
+							byte[] sectionData = (byte[]) f.chunks[zBlock][xBlock].sections()[ySection].findTagByName("Blocks").getValue();
 							for (int ly = 0; ly < 16; ly++) { for (int lz = 0; lz < 16; lz++) { for (int lx = 0; lx < 16; lx++) {
 								int x = f.xOffset * 512 + xBlock * 16 + lx;
 								int y = ySection * 16 + ly;
@@ -110,7 +130,7 @@ public class Ager {
 								}
 								if (phase == FALL && doExtendedPhase) {
 									if (ac.type > Types.Air &&
-										f.chunks[zBlock][xBlock].supported[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1])
+										f.chunks[zBlock][xBlock].supported.array[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1])
 									{
 										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
 									} else {
@@ -129,7 +149,9 @@ public class Ager {
 									}
 								}
 							}}}
-						} 
+						}
+						f.chunks[zBlock][xBlock].processed = true;
+						f.chunks[zBlock][xBlock].demoteNeighboursOrSelfIfDone();
 					}
 				}
 				System.out.println(++fi + "/" + m.files.size());

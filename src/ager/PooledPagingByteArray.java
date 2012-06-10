@@ -6,14 +6,24 @@ import java.io.RandomAccessFile;
 
 public class PooledPagingByteArray {
 	public static class Pool {
+		private File f;
 		private RandomAccessFile raf;
 		private long offset = 0;
 
 		public Pool() throws IOException {
-			raf = new RandomAccessFile(File.createTempFile("bpp", null), "rw");
+			f = File.createTempFile("bpp", null);
+			System.out.println(f.getAbsolutePath());
+			raf = new RandomAccessFile(f, "rw");
 		}
 		
 		public PooledPagingByteArray getArray(int size) { return new PooledPagingByteArray(size, this); }
+		
+		public void close() throws IOException {
+			raf.close();
+			f.delete();
+			f = null;
+			raf = null;
+		}
 	}
 	
 	public final Pool pool;
@@ -30,22 +40,28 @@ public class PooledPagingByteArray {
 		return array;
 	}
 	
+	public void reset() {
+		array = null;
+		offset = -1;
+	}
+	
 	public void pageIn() throws IOException {
-		if (offset == -1) {
-			array = new byte[size];
-		} else {
+		array = new byte[size];
+		if (offset != -1) {
 			pool.raf.seek(offset);
 			pool.raf.read(array);
 		}
 	}
 	
 	public void pageOut() throws IOException {
+		if (array == null) { return; }
 		if (offset == -1) {
 			offset = pool.offset;
 			pool.offset += size;
 		}
 		pool.raf.seek(offset);
 		pool.raf.write(array);
+		array = null;
 	}
 	
 	public static void main(String[] args) throws IOException {

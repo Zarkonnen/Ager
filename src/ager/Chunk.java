@@ -1,23 +1,19 @@
 package ager;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.BitSet;
+import java.io.OutputStream;
+import java.util.LinkedList;
+import net.minecraft.world.level.chunk.storage.RegionFile;
 import unknown.Tag;
 
 public class Chunk {
-	public Tag t;
-	Tag[] sections = new Tag[16];
-	byte[][] sectionBlocks = new byte[16][0];
+	private Tag t;
+	private Tag[] sections = new Tag[16];
+	private byte[][] sectionBlocks = new byte[16][0];
 	public int globalChunkX, globalChunkZ;
 	Chunk[][] chunkCtx = new Chunk[3][3];
 	
-	BitSet wasSupported = new BitSet(256 * 16 * 16); // yzx
-	BitSet isSupported = new BitSet(256 * 16 * 16); // yzx
-	boolean firstPass = true;
-	final BytePt3Stack q = new BytePt3Stack(8);
-	
-	BitSet partOfBlob = new BitSet(256 * 16 * 16);
+	//BitSet partOfBlob = new BitSet(256 * 16 * 16);
+	PooledPagingByteArray partOfBlob;
 	
 	final BytePt4Stack lightQ = new BytePt4Stack(8);
 	boolean lightFirstPass = true;
@@ -25,129 +21,126 @@ public class Chunk {
 	
 	// New support code!
 	static final byte[] NO_SUPPORT = new byte[256 * 16 * 16];
-	byte[] supported = new byte[256 * 16 * 16];
+	//byte[] supported = new byte[256 * 16 * 16];
+	PooledPagingByteArray supported;
 	boolean nFirstPass = true;
 	final BytePt4Stack nq = new BytePt4Stack(8);
 	
-	public Chunk(InputStream is, int globalChunkX, int globalChunkZ) throws IOException {
-		t = Tag.readFrom(is);
-		Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
-		for (Tag section : sArray) {
-			this.sections[(Byte) section.findTagByName("Y").getValue()] = section;
-			this.sectionBlocks[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("Blocks").getValue();
-			this.sectionSkyLights[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("SkyLight").getValue();
-		}
+	// Loading
+	LinkedList<Chunk> loadedChunkCache;
+	RegionFile rf;
+	int rfX, rfZ;
+	int maxChunksLoaded;
+	
+	public boolean processed = false;
+
+	public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, LinkedList<Chunk> loadedChunkCache, int maxChunksLoaded, PooledPagingByteArray.Pool pool) {
+		this.rf = rf;
+		this.rfX = rfX;
+		this.rfZ = rfZ;
 		this.globalChunkX = globalChunkX;
 		this.globalChunkZ = globalChunkZ;
+		this.loadedChunkCache = loadedChunkCache;
+		this.maxChunksLoaded = maxChunksLoaded;
+		supported = pool.getArray(256 * 16 * 16);
+		partOfBlob = pool.getArray(256 * 16 * 16);
 	}
 	
-	public void initSupport(boolean postRun) {
-		firstPass = true;
-		isSupported.clear();
-		final BitSet supported = postRun ? isSupported : wasSupported;
-		
-		// Start out by going from the bottom and marking everything as supported until we hit air.
-		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
-			int y = 0;
-			int type = getBlockType(x, y, z);
-			//while (type != Types.Air) {
-			while (true) {
-				supported.set(y * 256 + z * 16 + x);
-				if (y == 255) { break; }
-				if (type != -1 && !Rules.providesSupport[type + 1]) {
-					break;
-				}
-				y++;
-				type = getBlockType(x, y, z);
+	public boolean loaded() {
+		return t != null;
+	}
+	
+	public void demoteNeighboursOrSelfIfDone() {
+		if (!processed) { return; }
+		for (int z = 0; z < 3; z++) { for (int x = 0; x < 3; x++) {
+			if (chunkCtx[z][x] != null && chunkCtx[z][x].processed && chunkCtx[z][x].neighboursDone()) {
+				/*chunkCtx[z][x].save();
+				loadedChunkCache.remove(chunkCtx[z][x]);
+				System.out.println("Stabbing neighbours.");*/
+				loadedChunkCache.remove(chunkCtx[z][x]);
+				loadedChunkCache.push(chunkCtx[z][x]);
 			}
 		}}
+		
+		if (neighboursDone()) {
+			//save();
+			loadedChunkCache.remove(this);
+			loadedChunkCache.push(this);
+		}
 	}
 	
-	public void floodFill(boolean postRun) {
-		/*if (2 * 2 == 4) { // qqDPS
-			q.clear();
-			return;
-		}*/
-		
-		final BitSet supported = postRun ? isSupported : wasSupported;
-		if (firstPass) {
-			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
-				if (supported.get(y * 256 + z * 16 + x) && Rules.providesSupport[getBlockType(x, y, z) + 1]) {
-					q.push(x, y, z);
-				}
-			}}}
-			firstPass = false;
-		}
-		
-		while (!q.isEmpty()) {
-			q.pop();
-			for (int dy = -1; dy < 2; dy++) {
-				int ny = q.y + dy;
-				if (ny < 0 || ny >= 256) { continue; }
-				for (int dx = -1; dx < 2; dx++) {
-					int nx = q.x + dx;
-					//if (nx < 0 || nx >= 16) { continue; }
-					for (int dz = -1; dz < 2; dz++) {
-						if (dy != 0 && dx != 0 && dz != 0) { continue; }
-						if (dy == 0 && dx == 0 && dz == 0) { continue; }
-						int nz = q.z + dz;
-						//if (nz < 0 || nz >= 16) { continue; }
-						if ((nx < 0 || nx >= 16) || (nz < 0 || nz >= 16)) {
-							// We've crossed state lines, er, chunk boundaries!
-							int chunkXOffset =
-									nx < 0 ? -1 : nx >= 16 ? 1 : 0;
-							int chunkZOffset =
-									nz < 0 ? -1 : nz >= 16 ? 1 : 0;
-							Chunk targetChunk = chunkCtx[chunkZOffset + 1][chunkXOffset + 1];
-							if (targetChunk == null) { continue; }
-							int xInOtherChunk = (nx + 16) % 16;
-							int zInOtherChunk = (nz + 16) % 16;
-							//if (getBlockType(xInOtherChunk, ny, zInOtherChunk) > Types.Air && !(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk))
-							int type = targetChunk.getBlockType(xInOtherChunk, ny, zInOtherChunk);
-							if (
-								type > Types.Air &&
-								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
-								((dy != 0 && dx == 0 && dz == 0) || (dy == 0 && dx != 0 && dz == 0) || (dy == 0 && dx == 0 && dz != 0) || !Rules.needsSupportFromFaces[type + 1]) &&
-								!(postRun ? targetChunk.isSupported : targetChunk.wasSupported).get(ny * 256 + zInOtherChunk * 16 + xInOtherChunk)
-							)
-							{
-								(postRun ? targetChunk.isSupported : targetChunk.wasSupported).set(ny * 256 + zInOtherChunk * 16 + xInOtherChunk);
-								if (Rules.providesSupport[type + 1]) {
-									targetChunk.q.push(xInOtherChunk, ny, zInOtherChunk);
-								}
-							}
-						} else {
-							//if (getBlockType(nx, ny, nz) > Types.Air && !supported.get(ny * 256 + nz * 16 + nx)) {
-							int type = getBlockType(nx, ny, nz);
-							if (type > Types.Air &&
-								((dy == 1 && dx == 0 && dz == 0) || !Rules.needsSupportFromBelow[type + 1]) &&
-								((dy != 0 && dx == 0 && dz == 0) || (dy == 0 && dx != 0 && dz == 0) || (dy == 0 && dx == 0 && dz != 0) || !Rules.needsSupportFromFaces[type + 1]) &&
-								!supported.get(ny * 256 + nz * 16 + nx))
-							{
-								supported.set(ny * 256 + nz * 16 + nx);
-								if (Rules.providesSupport[type + 1]) {
-									q.push(nx, ny, nz);
-								}
-							}
-						}
-					}
+	public boolean neighboursDone() {
+		for (int z = 0; z < 3; z++) { for (int x = 0; x < 3; x++) {
+			if (chunkCtx[z][x] != null && !chunkCtx[z][x].processed) { return false; }
+		}}
+		return true;
+	}
+	
+	public Chunk prepare() {
+		if (!loaded()) {
+			if (loadedChunkCache.size() >= maxChunksLoaded) {
+				// Should prolly just take X.
+				int pops = Math.max(1, Math.min(40, loadedChunkCache.size() / 8));
+				System.out.println("Popping " + pops);
+				for (int i = 0; i < pops; i++) {
+					loadedChunkCache.pop().save();
 				}
 			}
+			load();
+		} else {
+			loadedChunkCache.remove(this);
 		}
-		
-		q.compactTo(8);
+		loadedChunkCache.add(this);
+		//System.out.println(loadedChunkCache.size());
+		return this;
+	}
+	
+	private void load() {
+		if (loaded()) { return; }
+		try {
+			t = Tag.readFrom(rf.getChunkDataInputStream(rfX, rfZ));
+			Tag[] sArray = (Tag[]) t.findTagByName("Level").findTagByName("Sections").getValue();
+			for (Tag section : sArray) {
+				this.sections[(Byte) section.findTagByName("Y").getValue()] = section;
+				this.sectionBlocks[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("Blocks").getValue();
+				this.sectionSkyLights[(Byte) section.findTagByName("Y").getValue()] = (byte[]) section.findTagByName("SkyLight").getValue();
+			}
+			supported.pageIn();
+			partOfBlob.pageIn();
+		} catch (Exception e) { throw new RuntimeException(e); }
+	}
+	
+	public void save() {
+		if (!loaded()) { return; }
+		try {
+			OutputStream os = rf.getChunkDataOutputStream(rfX, rfZ);
+			t.writeTo(os);
+			os.close();
+			t = null;
+			sections = new Tag[16];
+			sectionBlocks = new byte[16][0];
+			sectionSkyLights = new byte[16][0];
+			supported.pageOut();
+			partOfBlob.pageOut();
+		} catch (Exception e) { throw new RuntimeException(e); }
+	}
+	
+	public Tag[] sections() {
+		prepare();
+		return sections;
 	}
 	
 	public void newInitSupport() {
+		prepare();
 		nFirstPass = true;
-		System.arraycopy(NO_SUPPORT, 0, supported, 0, NO_SUPPORT.length);
+		System.arraycopy(NO_SUPPORT, 0, supported.array, 0, NO_SUPPORT.length);
 		
 		// Start out by going from the bottom and marking everything as supported until we hit air.
 		for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
 			int y = 0;
 			int type = getBlockType(x, y, z);
 			while (true) {
-				supported[y * 256 + z * 16 + x] = 100;
+				supported.array[y * 256 + z * 16 + x] = 100;
 				if (y == 255) { break; }
 				if (type != -1 && !Rules.providesSupport[type + 1]) {
 					break;
@@ -164,19 +157,25 @@ public class Chunk {
 	static final int[] SC = { 2,  3,  3,  3,  3,  5,  1,  5,  1,  1,  5,  1,  5,  0,  3,  3,  3,  3};
 	
 	public void newFloodFill() {
+		//prepare();
 		/*if (2 * 2 == 4) { // qqDPS
 			q.clear();
 			return;
 		}*/
 		
 		if (nFirstPass) {
+			prepare();
 			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { for (int x = 0; x < 16; x++) {
-				byte supp = supported[y * 256 + z * 16 + x];
+				byte supp = supported.array[y * 256 + z * 16 + x];
 				if (supp > 0 && Rules.providesSupport[getBlockType(x, y, z) + 1]) {
 					nq.push(x, y, z, supp);
 				}
 			}}}
 			nFirstPass = false;
+		} else {
+			if (!nq.isEmpty()) {
+				prepare();
+			}
 		}
 		
 		while (!nq.isEmpty()) {
@@ -198,6 +197,8 @@ public class Chunk {
 					if (targetChunk == null) { continue; }
 					nx = (nx + 16) % 16;
 					nz = (nz + 16) % 16;
+					targetChunk.prepare();
+					prepare();
 				}
 				int targetType = targetChunk.getBlockType(nx, ny, nz);
 				if (targetType == -1) { continue; }
@@ -208,8 +209,8 @@ public class Chunk {
 					continue;
 				}
 				int newSupport = srcSupport - SC[j] * Rules.support[srcType + 1];
-				if (newSupport > 0 && Rules.weight[targetType + 1] <= newSupport && newSupport > targetChunk.supported[ny * 256 + nz * 16 + nx]) {
-					targetChunk.supported[ny * 256 + nz * 16 + nx] = (byte) newSupport;
+				if (newSupport > 0 && Rules.weight[targetType + 1] <= newSupport && newSupport > targetChunk.supported.array[ny * 256 + nz * 16 + nx]) {
+					targetChunk.supported.array[ny * 256 + nz * 16 + nx] = (byte) newSupport;
 					if (!Rules.providesSupport[targetType + 1]) { continue; }
 					int continuedSupport = Math.min(Rules.maxSupport[targetType + 1], newSupport);
 					if (continuedSupport > 0) {
@@ -223,6 +224,7 @@ public class Chunk {
 	}
 	
 	public void removeLighting() {
+		prepare();
 		byte[] empty = new byte[2048];
 		
 		for (int y = 0; y < 16; y++) {
@@ -234,27 +236,24 @@ public class Chunk {
 	}
 	
 	public boolean getPartOfBlob(int x, int y, int z) {
-		return partOfBlob.get(y * 256 + z * 16 + x);
+		//prepare();
+		return partOfBlob.array[y * 256 + z * 16 + x] > 0;
+		//return partOfBlob.get(y * 256 + z * 16 + x);
 	}
 	
 	public void setPartOfBlob(int x, int y, int z, boolean value) {
-		partOfBlob.set(y * 256 + z * 16 + x, value);
+		//prepare();
+		partOfBlob.array[y * 256 + z * 16 + x] = (byte) (value ? 1 : 0);
+		//partOfBlob.set(y * 256 + z * 16 + x, value);
 	}
 	
 	public void clearPartOfBlob() {
-		partOfBlob.clear();
-	}
-	
-	public boolean getSupported(int x, int y, int z, boolean postRun) {
-		return (postRun ? isSupported : wasSupported).get(y * 256 + z * 16 + x);
-	}
-	
-	public void setSupported(boolean supported, int x, int y, int z, boolean postRun) {
-		(postRun ? isSupported : wasSupported).set(y * 256 + z * 16 + x, supported);
+		partOfBlob.reset();
 	}
 	
 	public int getBlockType(int x, int y, int z) {
 		if (y < 0 || y > 255) { return -1; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
@@ -269,6 +268,7 @@ public class Chunk {
 	
 	public void setBlockType(byte type, int x, int y, int z) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
@@ -292,6 +292,7 @@ public class Chunk {
 	
 	public int getData(int x, int y, int z) {
 		if (y < 0 || y > 255) { return -1; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
@@ -302,6 +303,7 @@ public class Chunk {
 	
 	public void setData(byte data, int x, int y, int z) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
@@ -312,6 +314,7 @@ public class Chunk {
 	
 	public int getSkyLight(int x, int y, int z) {
 		if (y < 0 || y > 255) { return -1; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
@@ -323,6 +326,7 @@ public class Chunk {
 	
 	public void setSkyLight(byte light, int x, int y, int z) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
@@ -335,6 +339,7 @@ public class Chunk {
 	
 	public int getBlockLight(int x, int y, int z) {
 		if (y < 0 || y > 255) { return -1; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return -1; }
@@ -345,6 +350,7 @@ public class Chunk {
 	
 	public void setBlockLight(byte light, int x, int y, int z) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		int section = y / 16;
 		int remY = y % 16;
 		if (sections[section] == null) { return; }
@@ -354,6 +360,7 @@ public class Chunk {
 	}
 	
 	public void calculateInitialSkyLights() {
+		prepare();
 		for (int z = 0; z < 16; z++) { lp: for (int x = 0; x < 16; x++) {
 			int y = 255;
 			int l = 15;
@@ -377,7 +384,9 @@ public class Chunk {
 	static final int[] NS_Z = { 0, 0, 0, 0,-1, 1 };
 	
 	public void skyLightFloodFill() {
+		//prepare();
 		if (lightFirstPass) {
+			prepare();
 			for (int y = 0; y < 256; y++) { for (int z = 0; z < 16; z++) { lp: for (int x = 0; x < 16; x++) {
 				int l = getSkyLight(x, y, z);
 				if (l > 0) {
@@ -385,6 +394,10 @@ public class Chunk {
 				}
 			}}}
 			lightFirstPass = false;
+		} else {
+			if (!lightQ.isEmpty()) {
+				prepare();
+			}
 		}
 		
 		while (!lightQ.isEmpty()) {
@@ -438,6 +451,7 @@ public class Chunk {
 	
 	public void clearTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
 		Tag[] tes = (Tag[]) tesN.getValue();
 		//System.out.println(tes);
@@ -459,6 +473,7 @@ public class Chunk {
 	
 	public Tag getTileEntity(int x, int y, int z, int globX, int globY, int globZ) {
 		if (y < 0 || y > 255) { return null; }
+		//prepare();
 		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
 		Tag[] tes = (Tag[]) tesN.getValue();
 		for (int i = 0; i < tes.length; i++) {
@@ -475,6 +490,7 @@ public class Chunk {
 	
 	public void setTileEntity(Tag te, int x, int y, int z, int globX, int globY, int globZ) {
 		if (y < 0 || y > 255) { return; }
+		//prepare();
 		Tag tesN = t.findTagByName("Level").findTagByName("TileEntities");
 		Tag[] tes = (Tag[]) tesN.getValue();
 		for (int i = 0; i < tes.length; i++) {
@@ -493,6 +509,7 @@ public class Chunk {
 	}
 
 	public void clearAllEntities() {
+		prepare();
 		t.findTagByName("Level").findTagByName("Entities").clearList();//setValue(Tag.Type.TAG_Compound);
 	}
 }
