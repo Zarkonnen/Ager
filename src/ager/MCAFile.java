@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import unknown.Tag;
 
@@ -16,7 +16,7 @@ public class MCAFile {
 	private RegionFile rf;
 	private PooledPagingByteArray.Pool pool = new PooledPagingByteArray.Pool();
 	
-	public MCAFile(File regions, int xOffset, int zOffset, LinkedList<Chunk> loadedChunkCache, int maxChunksLoaded) throws FileNotFoundException, IOException {
+	public MCAFile(File regions, int xOffset, int zOffset, ArrayList<Chunk> loadedChunkCache, int maxChunksLoaded) throws FileNotFoundException, IOException {
 		file = new File(regions, "r." + xOffset + "." + zOffset + ".mca");
 		this.xOffset = xOffset;
 		this.zOffset = zOffset;
@@ -57,18 +57,20 @@ public class MCAFile {
 		if (rf != null) { rf.close(); }
 	}
 	
-	public void newInitSupport() {
+	public void newInitSupport(Blinkenlights bl) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
 				chunks[z][x].newInitSupport();
+				if (bl != null) { bl.repaint(); }
 			}
 		}}
 	}
 	
-	public boolean newFinishSupport() {
+	public boolean newFinishSupport(Blinkenlights bl) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
 				chunks[z][x].newFloodFill();
+				if (bl != null) { bl.repaint(); }
 			}
 		}}
 			
@@ -180,18 +182,20 @@ public class MCAFile {
 		chunks[chunkZ][chunkX].setTileEntity(te, x % 16, y, z % 16, globX, globY, globZ);
 	}
 	
-	public void calculateInitialSkyLights() {
+	public void calculateInitialSkyLights(Blinkenlights bl) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
 				chunks[z][x].calculateInitialSkyLights();
+				if (bl != null) { bl.repaint(); }
 			}
 		}}
 	}
 	
-	public boolean finishSkyLights() {
+	public boolean finishSkyLights(Blinkenlights bl) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
 				chunks[z][x].skyLightFloodFill();
+				if (bl != null) { bl.repaint(); }
 			}
 		}}
 			

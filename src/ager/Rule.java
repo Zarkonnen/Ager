@@ -256,7 +256,7 @@ public class Rule {
 		
 		@Override
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
-			int total = 0;
+			/*int total = 0;
 			Chunk ch = null;
 			ch = map.getChunkForBlock(x, z);
 			if (ch != null) {
@@ -285,7 +285,14 @@ public class Rule {
 				ch.prepare();
 				total += map.getBlockType(x, y, z + 1) == type ? 1 : 0;
 			}
-			return total;
+			return total;*/
+			return
+					(map.getBlockType(x - 1, y, z) == type ? 1 : 0) +
+					(map.getBlockType(x + 1, y, z) == type ? 1 : 0) +
+					(map.getBlockType(x, y - 1, z) == type ? 1 : 0) +
+					(map.getBlockType(x, y + 1, z) == type ? 1 : 0) +
+					(map.getBlockType(x, y, z - 1) == type ? 1 : 0) +
+					(map.getBlockType(x, y, z + 1) == type ? 1 : 0);
 		}
 	}
 	
@@ -306,9 +313,9 @@ public class Rule {
 			int sum = 0;
 			for (int dx = -1; dx < 2; dx++) { for (int dy = -1; dy < 2; dy++) { for (int dz = -1; dz < 2; dz++) {
 				if (dx != 0 && dy != 0 && dz != 0) { continue; }
-				Chunk ch = map.getChunkForBlock(x + dx, z + dz);
+				/*Chunk ch = map.getChunkForBlock(x + dx, z + dz);
 				if (ch == null) { continue; }
-				ch.prepare();
+				ch.prepare();*/
 				if (map.getBlockType(x + dx, y + dy, z + dz) == type) { sum++; }
 			}}}
 			return sum;

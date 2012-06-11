@@ -12,6 +12,7 @@ public class PooledPagingByteArray {
 
 		public Pool() throws IOException {
 			f = File.createTempFile("bpp", null);
+			f.deleteOnExit();
 			System.out.println(f.getAbsolutePath());
 			raf = new RandomAccessFile(f, "rw");
 		}

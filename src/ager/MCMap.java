@@ -2,7 +2,6 @@ package ager;
 
 import com.jcraft.jzlib.GZIPInputStream;
 import com.jcraft.jzlib.GZIPOutputStream;
-import java.awt.Point;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -10,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.Random;
 import unknown.Tag;
 
@@ -21,7 +20,8 @@ public class MCMap {
 	public final Tag levelDatOld;
 	public int maxChunksLoaded;
 	
-	public final LinkedList<Chunk> loadedChunkCache = new LinkedList<Chunk>();
+	public final ArrayList<Chunk> loadedChunks = new ArrayList<Chunk>();
+	public Blinkenlights bl;
 
 	public MCMap(File worldF, int maxChunksLoaded) throws FileNotFoundException, IOException {
 		this.worldF = worldF;
@@ -53,7 +53,7 @@ public class MCMap {
 				String[] bits = f.getName().split("[.]");
 				int x = Integer.parseInt(bits[1]);
 				int z = Integer.parseInt(bits[2]);
-				files.put(x, z, new MCAFile(new File(worldF, "region"), x, z, loadedChunkCache, maxChunksLoaded));
+				files.put(x, z, new MCAFile(new File(worldF, "region"), x, z, loadedChunks, maxChunksLoaded));
 			}
 		}
 		for (MCAFile f : files) {
@@ -322,14 +322,14 @@ public class MCMap {
 	
 	public void newCalcSupport() {
 		for (MCAFile f : files) {
-			f.newInitSupport();
+			f.newInitSupport(bl);
 		}
 		
 		int pass = 1;
 		lp: while (true) {
 			System.out.println("FinishSupport pass " + pass++);
 			for (MCAFile f : files) {
-				if (!f.newFinishSupport()) {
+				if (!f.newFinishSupport(bl)) {
 					continue lp;
 				}
 			}
@@ -446,14 +446,15 @@ public class MCMap {
 	
 	public void calcSkyLight() {
 		for (MCAFile f : files) {
-			f.calculateInitialSkyLights();
+			f.calculateInitialSkyLights(bl);
 		}
 		
 		int pass = 1;
 		lp: while (true) {
 			System.out.println("FinishSkyLights pass " + pass++);
 			for (MCAFile f : files) {
-				if (!f.finishSkyLights()) {
+				if (bl != null) { bl.repaint(); }
+				if (!f.finishSkyLights(bl)) {
 					continue lp;
 				}
 			}

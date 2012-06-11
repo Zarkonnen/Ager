@@ -1,6 +1,9 @@
 package ager;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import unknown.Tag;
@@ -27,21 +30,24 @@ public class Chunk {
 	final BytePt4Stack nq = new BytePt4Stack(8);
 	
 	// Loading
-	LinkedList<Chunk> loadedChunkCache;
 	RegionFile rf;
 	int rfX, rfZ;
 	int maxChunksLoaded;
 	
 	public boolean processed = false;
+	
+	static long accessCounter = 0;
+	long lastAccess = 0;
+	ArrayList<Chunk> loadedChunks;
 
-	public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, LinkedList<Chunk> loadedChunkCache, int maxChunksLoaded, PooledPagingByteArray.Pool pool) {
+	public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, ArrayList<Chunk> loadedChunks, int maxChunksLoaded, PooledPagingByteArray.Pool pool) {
 		this.rf = rf;
 		this.rfX = rfX;
 		this.rfZ = rfZ;
 		this.globalChunkX = globalChunkX;
 		this.globalChunkZ = globalChunkZ;
-		this.loadedChunkCache = loadedChunkCache;
 		this.maxChunksLoaded = maxChunksLoaded;
+		this.loadedChunks = loadedChunks;
 		supported = pool.getArray(256 * 16 * 16);
 		partOfBlob = pool.getArray(256 * 16 * 16);
 	}
@@ -54,18 +60,12 @@ public class Chunk {
 		if (!processed) { return; }
 		for (int z = 0; z < 3; z++) { for (int x = 0; x < 3; x++) {
 			if (chunkCtx[z][x] != null && chunkCtx[z][x].processed && chunkCtx[z][x].neighboursDone()) {
-				/*chunkCtx[z][x].save();
-				loadedChunkCache.remove(chunkCtx[z][x]);
-				System.out.println("Stabbing neighbours.");*/
-				loadedChunkCache.remove(chunkCtx[z][x]);
-				loadedChunkCache.push(chunkCtx[z][x]);
+				chunkCtx[z][x].lastAccess -= 1000;
 			}
 		}}
 		
 		if (neighboursDone()) {
-			//save();
-			loadedChunkCache.remove(this);
-			loadedChunkCache.push(this);
+			lastAccess -= 1000;
 		}
 	}
 	
@@ -77,8 +77,24 @@ public class Chunk {
 	}
 	
 	public Chunk prepare() {
-		if (!loaded()) {
-			if (loadedChunkCache.size() >= maxChunksLoaded) {
+		lastAccess = accessCounter++;
+		if (t == null) { // !loaded()
+			if (loadedChunks.size() >= maxChunksLoaded) {
+				Collections.sort(loadedChunks, new Comparator<Chunk>() {
+					@Override
+					public int compare(Chunk t, Chunk t1) {
+						return t.lastAccess > t1.lastAccess ? 1 : t.lastAccess < t1.lastAccess ? -1 : 0;
+					}
+				});
+				int pops = Math.max(1, Math.min(40, loadedChunks.size() / 8));
+				for (Chunk ch : loadedChunks.subList(0, pops)) {
+					ch.save();
+				}
+				loadedChunks.subList(0, pops).clear();
+			}
+			load();
+			loadedChunks.add(this);
+			/*if (loadedChunkCache.size() >= maxChunksLoaded) {
 				// Should prolly just take X.
 				int pops = Math.max(1, Math.min(40, loadedChunkCache.size() / 8));
 				System.out.println("Popping " + pops);
@@ -86,12 +102,8 @@ public class Chunk {
 					loadedChunkCache.pop().save();
 				}
 			}
-			load();
-		} else {
-			loadedChunkCache.remove(this);
+			load();*/
 		}
-		loadedChunkCache.add(this);
-		//System.out.println(loadedChunkCache.size());
 		return this;
 	}
 	
@@ -178,6 +190,7 @@ public class Chunk {
 			}
 		}
 		
+		boolean[][] ctxPrepared = new boolean[3][3];
 		while (!nq.isEmpty()) {
 			nq.pop();
 			int srcType = getBlockType(nq.x, nq.y, nq.z);
@@ -197,8 +210,10 @@ public class Chunk {
 					if (targetChunk == null) { continue; }
 					nx = (nx + 16) % 16;
 					nz = (nz + 16) % 16;
-					targetChunk.prepare();
-					prepare();
+					if (!ctxPrepared[chunkZOffset + 1][chunkXOffset + 1]) {
+						targetChunk.prepare();
+						ctxPrepared[chunkZOffset + 1][chunkXOffset + 1] = true;
+					}
 				}
 				int targetType = targetChunk.getBlockType(nx, ny, nz);
 				if (targetType == -1) { continue; }

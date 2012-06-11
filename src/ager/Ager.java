@@ -20,10 +20,12 @@ public class Ager {
 			System.out.println("Options are in key=value format. Available options:");
 			System.out.println("gamemode=survival|hardcore|creative");
 			System.out.println("players=keep|reset|explorers");
+			System.out.println("blinkenlights=false|true");
 		}
 		
 		Random r = new Random();
 		
+		Blinkenlights bl = null;
 		MCMap m = new MCMap(new File(args[0]), (int) (Math.min(Runtime.getRuntime().maxMemory() / 400000, 100000000)));
 		
 		m.resetLevelData();
@@ -49,6 +51,10 @@ public class Ager {
 				if (v.equals("explorers")) {
 					m.makePlayersAdventurers(r);
 				}
+			}
+			if (k.equals("blinkenlights") && v.equals("true")) {
+				bl = new Blinkenlights(m);
+				m.bl = bl;
 			}
 		}
 		
@@ -100,9 +106,13 @@ public class Ager {
 					for (int xBlock = 0; xBlock < 32; xBlock++) {
 						if (f.chunks[zBlock][xBlock] == null) { continue; }
 						for (int dz = -1; dz < 2; dz++) { for (int dx = -1; dx < 2; dx++) {
-							Chunk ch = m.getChunk(xBlock + f.xOffset, zBlock + f.zOffset);
+							Chunk ch = m.getChunk(xBlock + f.xOffset * 32 + dx, zBlock + f.zOffset * 32 + dz);
 							if (ch != null) { ch.prepare(); }
 						}}
+						// qqDPS
+						if (bl != null) {
+							bl.repaint();
+						}
 						//f.chunks[zBlock][xBlock].prepare();
 						for (int ySection = 0; ySection < 16; ySection++) {
 							if (f.chunks[zBlock][xBlock].sections()[ySection] == null) { continue; }
@@ -161,5 +171,9 @@ public class Ager {
 		m.clearAllEntities();
 				
 		m.writeAndClose();
+		
+		if (bl != null) {
+			bl.dispose();
+		}
 	}
 }
