@@ -154,7 +154,7 @@ public class Chunk {
 			while (true) {
 				supported.array[y * 256 + z * 16 + x] = 100;
 				if (y == 255) { break; }
-				if (type != -1 && !Rules.providesSupport[type + 1]) {
+				if (type != -1 && (!Rules.providesSupport[type + 1] || Rules.supportFromAboveAndSidesOnly[type + 1])) {
 					break;
 				}
 				y++;
