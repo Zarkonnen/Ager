@@ -29,8 +29,11 @@ public class Rules {
 	public static final ArrayList<Rule>[] secondRulesForType = new ArrayList[1024];
 	
 	public static int[] fallChanges = new int[1024];
+	public static double[] fallChangeP = new double[1024];
+	public static double[] fallStaySameP = new double[1024];
 	public final static boolean[] providesSupport = new boolean[1024];
 	public final static boolean[] needsSupportFromBelow = new boolean[1024];
+	public final static boolean[] supportFromAboveAndSidesOnly = new boolean[1024];
 	public final static boolean[] needsSupportFromFaces = new boolean[1024];
 	public final static boolean[] fallThru = new boolean[1024];
 	public static final boolean[] checkTileEntity = new boolean[1024];
@@ -101,6 +104,12 @@ public class Rules {
 		fallChanges[type] = as;
 	}
 	
+	static void fallsAs(int type, double staysSameP, double changeP, int into) {
+		fallChangeP[type] = changeP;
+		fallStaySameP[type] = staysSameP;
+		fallChanges[type] = into;
+	}
+	
 	static void doesNotSupport(int type) {
 		providesSupport[type + 1] = false;
 	}
@@ -129,15 +138,15 @@ public class Rules {
 		mat(More_Lava, 100, 70, 0);
 		mat(Stone, 2, 60);
 		mat(Cobblestone, 3, 50);
-		mat(Grass, 5, 35, 50);
-		mat(Dirt, 5, 30, 70);
+		mat(Grass, 5, 27, 80);
+		mat(Dirt, 12, 28, 75);
 		mat(Sand, 100, 30, 0);
 		mat(Gravel, 100, 40, 0);
 		mat(Gold_Ore, 1, 70);
 		mat(Iron_Ore, 1, 65);
 		mat(Coal_Ore, 2, 55);
 		mat(Wood, 3, 45);
-		mat(Leaves, 1, 2, 15);
+		mat(Leaves, 0, 1, 2);
 		mat(Glass, 1, 50);
 		mat(Lapis_Lazuli_Ore, 1, 60);
 		mat(Dispenser, 2, 20);
@@ -200,6 +209,7 @@ public class Rules {
 		mat(Enchantment_Table, 100, 40, 0);
 		mat(Brewing_Stand, 100, 10, 0);
 		mat(Cauldron, 100, 10, 0);
+		mat(Bookshelf, 7, 40, 60);
 		
 		flows(More_Lava); // qqDPS
 		flows(Lava);
@@ -309,32 +319,32 @@ public class Rules {
 		itemTakesDamage(Iron_Axe, 0.2, 20, 251);
 		itemTakesDamage(Iron_Boots, 0.1, 20, 196);
 		itemVanishes(Iron_Door, 0.05);
-		itemTakesDamage(Iron_Chestplate, 0.1, 20, 529);
-		itemTakesDamage(Iron_Hoe, 0.2, 20, 251);
-		itemTakesDamage(Iron_Helmet, 0.1, 20, 166);
-		itemTakesDamage(Iron_Leggings, 0.1, 20, 226);
-		itemTakesDamage(Iron_Pickaxe, 0.2, 20, 251);
-		itemTakesDamage(Iron_Shovel, 0.2, 20, 251);
-		itemTakesDamage(Iron_Sword, 0.2, 20, 251);
-		itemTakesDamage(Gold_Axe, 0.2, 5, 33);
-		itemTakesDamage(Gold_Hoe, 0.2, 5, 33);
-		itemTakesDamage(Gold_Pickaxe, 0.2, 5, 33);
-		itemTakesDamage(Gold_Shovel, 0.2, 5, 33);
-		itemTakesDamage(Gold_Sword, 0.2, 5, 33);
-		itemVanishes(Diamond_Axe, 0.01);
-		itemVanishes(Diamond_Hoe, 0.01);
-		itemVanishes(Diamond_Pickaxe, 0.01);
-		itemVanishes(Diamond_Shovel, 0.01);
-		itemVanishes(Diamond_Sword, 0.01);
-		itemTakesDamage(Wooden_Axe, 0.3, 20, 60);
-		itemTakesDamage(Wooden_Hoe, 0.3, 20, 60);
-		itemTakesDamage(Wooden_Pickaxe, 0.3, 20, 60);
-		itemTakesDamage(Wooden_Shovel, 0.3, 20, 60);
-		itemTakesDamage(Wooden_Sword, 0.3, 20, 60);
-		itemTakesDamage(Leather_Boots, 0.5, 7, 66);
-		itemTakesDamage(Leather_Chestplate, 0.5, 7, 82);
-		itemTakesDamage(Leather_Helmet, 0.5, 7, 56);
-		itemTakesDamage(Leather_Leggings, 0.5, 7, 76);
+		itemTakesDamage(Iron_Chestplate, 0.3, 20, 529);
+		itemTakesDamage(Iron_Hoe, 0.5, 20, 251);
+		itemTakesDamage(Iron_Helmet, 0.3, 20, 166);
+		itemTakesDamage(Iron_Leggings, 0.3, 20, 226);
+		itemTakesDamage(Iron_Pickaxe, 0.6, 20, 251);
+		itemTakesDamage(Iron_Shovel, 0.6, 20, 251);
+		itemTakesDamage(Iron_Sword, 0.6, 20, 251);
+		itemTakesDamage(Gold_Axe, 0.6, 5, 33);
+		itemTakesDamage(Gold_Hoe, 0.6, 5, 33);
+		itemTakesDamage(Gold_Pickaxe, 0.6, 5, 33);
+		itemTakesDamage(Gold_Shovel, 0.6, 5, 33);
+		itemTakesDamage(Gold_Sword, 0.6, 5, 33);
+		itemVanishes(Diamond_Axe, 0.03);
+		itemVanishes(Diamond_Hoe, 0.03);
+		itemVanishes(Diamond_Pickaxe, 0.03);
+		itemVanishes(Diamond_Shovel, 0.03);
+		itemVanishes(Diamond_Sword, 0.03);
+		itemTakesDamage(Wooden_Axe, 0.9, 20, 60);
+		itemTakesDamage(Wooden_Hoe, 0.9, 20, 60);
+		itemTakesDamage(Wooden_Pickaxe, 0.9, 20, 60);
+		itemTakesDamage(Wooden_Shovel, 0.9, 20, 60);
+		itemTakesDamage(Wooden_Sword, 0.9, 20, 60);
+		itemTakesDamage(Leather_Boots, 0.9, 12, 66);
+		itemTakesDamage(Leather_Chestplate, 0.9, 12, 82);
+		itemTakesDamage(Leather_Helmet, 0.9, 12, 56);
+		itemTakesDamage(Leather_Leggings, 0.9, 12, 76);
 		itemVanishes(Apple, 0.4);
 		itemVanishes(String, 0.4);
 		itemVanishes(Feather, 0.4);
@@ -353,6 +363,7 @@ public class Rules {
 		itemVanishes(Sugar, 0.3);
 		itemVanishes(Map, 0.1);
 		itemVanishes(Melon, 1.0);
+		itemVanishes(Cake, 0.9);
 		itemVanishes(Rotten_Flesh, 0.02);
 		itemBecomes(Raw_Beef, 1.0, Rotten_Flesh);
 		itemBecomes(Raw_Chicken, 1.0, Rotten_Flesh);
@@ -376,14 +387,14 @@ public class Rules {
 		hasTileEntity(Cauldron);
 		
 		survivesFallAs(Sand, Sand);
-		survivesFallAs(Gravel, Gravel);
-		survivesFallAs(Cobblestone, Gravel);
-		survivesFallAs(Stone_Brick, Gravel);
-		survivesFallAs(Sandstone, Sand);
-		survivesFallAs(Brick, Gravel);
+		fallsAs(Gravel, 0.2, 0.8, Air);
+		fallsAs(Cobblestone, 0.2, 0.4, Gravel);
+		fallsAs(Stone_Brick, 0.5, 0.45, Gravel);
+		fallsAs(Sandstone, 0.1, 0.7, Sand);
+		fallsAs(Brick, 0.0, 0.2, Gravel);
 		survivesFallAs(Cauldron, Cauldron);
 		survivesFallAs(Dirt, Dirt);
-		survivesFallAs(Stone, Gravel);
+		fallsAs(Stone, 0.3, 0.3, Gravel);
 		survivesFallAs(Enchantment_Table, Obsidian);
 		survivesFallAs(Obsidian, Obsidian);
 		survivesFallAs(Iron_Bars, Iron_Bars);
@@ -433,6 +444,7 @@ public class Rules {
 		requiresSupportFromBelow(Stone_Pressure_Plate);
 		requiresSupportFromBelow(Nether_Wart);
 		requiresSupportFromBelow(Brewing_Stand);
+		supportFromAboveAndSidesOnly[Vines + 1] = true;
 		
 		requiresDirectSupport(Glass_Pane);
 		requiresDirectSupport(Fence);
@@ -466,36 +478,38 @@ public class Rules {
 		itemsFallThrough(Wall_Sign);
 		itemsFallThrough(Stone_Button);
 		
+		rule().desc("Fire goes away.").
+				p(0.9).when(is(Fire)).then(become(Air));
 		rule().desc("Exposed cobble turns to gravel.").
 				p(0.05).when(is(Cobblestone)).when(skyExposed()).when(nextToAtLeast(5, Air)).then(become(Gravel));
 		rule().desc("Cobble near water or mossy cobble turns mossy.").
-				p(0.001).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Water)).moreLikelyWhen(touching(0.06, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
+				p(0.002).when(is(Cobblestone)).moreLikelyWhen(inVicinityOf(0.12, 3, Water)).moreLikelyWhen(touching(0.06, Mossy_Cobblestone)).then(become(Mossy_Cobblestone));
 		rule().desc("Cobble weathering.").
-				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.0001).when(is(Cobblestone)).moreLikelyWhen(skyExposed(0.12)).moreLikelyWhen(below(0.12, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Mossy cobble weathering.").
-				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.3)).moreLikelyWhen(below(0.2, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
+				p(0.0001).when(is(Mossy_Cobblestone)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Grass growth.").
 				p(1).when(is(Dirt)).when(nextTo(Grass)).when(below(Air)).then(become(Grass));
 		rule().desc("Gravel vanishing.").
-				p(0.00).when(is(Gravel)).moreLikelyWhen(touching(0.003, Air)).then(become(Air));
+				p(0.01).when(is(Gravel)).when(touchingAtLeast(5, Air)).then(become(Air));
 		rule().desc("Gravel turning into soil.").
-				p(0.1).when(is(Gravel)).when(below(Air)).when(touching(Dirt)).then(become(Dirt));
+				p(0.15).when(is(Gravel)).when(below(Air)).when(touching(Dirt)).then(become(Dirt));
+		rule().desc("Gravel turning into soil.").
+				p(0.15).when(is(Gravel)).when(below(Air)).when(touching(Grass)).then(become(Dirt));
 		rule().desc("Sand becoming sandstone.").
 				p(0.05).when(is(Sand)).when(below(Sand)).then(become(Sandstone));
 		rule().desc("Sand becoming sandstone.").
 				p(0.4).when(is(Sand)).when(below(Sandstone)).then(become(Sandstone));
 		rule().desc("Sandstone vanishing.").
-				p(0).when(is(Sandstone)).moreLikelyWhen(skyExposed(0.2)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
+				p(0).when(is(Sandstone)).moreLikelyWhen(skyExposed(0.2)).moreLikelyWhen(below(0.02, Air)).then(become(Air));
 		rule().desc("Stone blocks vanishing.").
 				p(0.00001).when(is(Stone_Brick)).moreLikelyWhen(skyExposed(0.03)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.00001, Air)).then(become(Air));
 		rule().desc("Wooden planks vanishing.").
-				p(0.1).when(is(Wooden_Plank)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.03, Air)).moreLikelyWhen(touching(0.01, Air)).then(become(Air));
+				p(0.01).when(is(Wooden_Plank)).moreLikelyWhen(skyExposed(0.1)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.005, Air)).then(become(Air));
 		rule().desc("Crafting table vanishing.").
-				p(0.1).when(is(Crafting_Table)).then(become(Air));
-		rule().desc("Crafting table vanishing.").
-				p(0.1).when(is(Crafting_Table)).then(become(Air));
+				p(0.05).when(is(Crafting_Table)).then(become(Air));
 		rule().desc("Furnace vanishing.").
-				p(0.05).when(is(Furnace)).then(become(Air));
+				p(0.03).when(is(Furnace)).then(become(Air));
 		rule().desc("Enchantment table breaking.").
 				p(0.001).when(is(Enchantment_Table)).then(become(Obsidian));
 		rule().desc("Enchantment table breaking, but in a nice way.").
@@ -505,11 +519,11 @@ public class Rules {
 		rule().desc("Piston vanishing.").
 				p(0.005).when(is(Piston)).then(become(Air));
 		rule().desc("Redstone lamp vanishing.").
-				p(0.01).when(is(Redstone_Lamp_off)).then(become(Air));
+				p(0.1).when(is(Redstone_Lamp_off)).then(become(Air));
+		rule().desc("Redstone lamp vanishing.").
+				p(0.1).when(is(Redstone_Lamp_on)).then(become(Air));
 		rule().desc("Glowstone vanishing.").
 				p(0.01).when(is(Glowstone)).moreLikelyWhen(skyExposed(0.05)).then(become(Air));
-		rule().desc("Redstone lamp vanishing.").
-				p(0.01).when(is(Redstone_Lamp_on)).then(become(Air));
 		rule().desc("Rail vanishing.").
 				p(0.002).when(is(Rails)).then(become(Air));
 		rule().desc("Powered rail becoming depowered.").
@@ -563,11 +577,11 @@ public class Rules {
 		rule().desc("Cake vanishing.").
 				p(0.9).when(is(Cake_Block)).then(become(Air));
 		rule().desc("Wool vanishing.").
-				p(0.1).when(is(Wool)).moreLikelyWhen(skyExposed(0.15)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.05, Air)).then(become(Air));
+				p(0.01).when(is(Wool)).moreLikelyWhen(skyExposed(0.15)).moreLikelyWhen(below(0.1, Air)).moreLikelyWhen(touching(0.005, Air)).then(become(Air));
 		rule().desc("Wheat vanishing.").
 				p(0.4).when(is(Wheat_Crops)).then(become(Air));
 		rule().desc("Torch vanishing.").
-				p(0.65).when(is(Torch)).then(become(Air));
+				p(0.75).when(is(Torch)).then(become(Air));
 		rule().desc("Bookcases rotting.").
 				p(0.1).when(is(Bookshelf)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
 		
@@ -655,13 +669,13 @@ public class Rules {
 		
 		// Doors
 		rule().desc("Wooden doors disappear pretty quickly.").
-				p(0.3).when(isConnectedBlobOf(Wooden_Door_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+				p(0.6).when(isConnectedBlobOf(Wooden_Door_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		rule().desc("Metal doors disappear very rarely.").
 				p(0.01).when(isConnectedBlobOf(Wooden_Door_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Beds
 		rule().desc("Beds disappear pretty quickly.").
-				p(0.3).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+				p(0.45).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
 		// Chests
 		/*rule().desc("Chests disappear very rarely.").
@@ -687,7 +701,7 @@ public class Rules {
 		
 		// Spawning spawners
 		secondRule().desc("Spawning a spawner.").
-				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(createStructure("spawner", SPAWNER, null, -2, 1, -2, 0, 0)).
+				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(createStructure("spawner", SPAWNER, null, -1, 1, -1, 0, 0)).
 				then(new Outcome()
 		{
 			@Override

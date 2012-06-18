@@ -58,7 +58,9 @@ public class Rule {
 	public boolean apply(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
 		ac.currentRule = this;
 		for (Condition c : conditions) {
-			if (!c.test(x, y, z, map, ac)) { return false; }
+			if (!c.test(x, y, z, map, ac)) {
+				return false;
+			}
 		}
 		double p = baseProbability;
 		for (ProbabilityModifier m : modifiers) {
@@ -208,7 +210,11 @@ public class Rule {
 	public static class SkyExposed implements Check {
 		@Override
 		public int get(int x, int y, int z, MCMap map, ApplicationCache ac) {
-			return map.getSkyLight(x, y, z) == 15 ? 1 : 0;
+			//return map.getSkyLight(x, y, z) == 15 ? 1 : 0;
+			for (int ny = y + 1; ny < 256; ny++) {
+				if (map.getBlockType(x, ny, z) > Types.Air) { return 0; }
+			}
+			return 1;
 		}
 	}
 	
@@ -419,23 +425,34 @@ public class Rule {
 	public static class Fall implements Outcome {
 		@Override
 		public boolean perform(int x, int y, int z, MCMap map, Random r, ApplicationCache ac) {
-			fall(x, y, z, map, map.getBlockType(x, y, z));
+			int type = map.getBlockType(x, y, z);
+			fall(x, y, z, map, Rules.fallChanges[type], Rules.fallStaySameP[type], Rules.fallChangeP[type], r);
 			return true;
 		}
 	}
 	
 	public static Outcome fall() { return new Fall(); }
 	
-	public static void fall(int x, int y, int z, MCMap map, int becomes) {
+	public static void fall(int x, int y, int z, MCMap map, int becomes, double fallStaySameP, double fallChangeP, Random r) {
 		Chunk ch = map.getChunkForBlock(x, z);
 		if (ch == null) { return; }
 		ch.prepare();
 		// how deep can we go?
+		int originalType = map.getBlockType(x, y, z);
 		int fallY = y;
 		while (Rules.fallThru[map.getBlockType(x, --fallY, z) + 1] && fallY >= 0) {}
 		fallY++;
 		if (fallY < y) {
-			if (becomes != Types.Air) { map.setBlockType((byte) becomes, x, fallY, z); }
+			int thisOneBecomes = Types.Air;
+			double roll = r.nextDouble();
+			if (roll < fallStaySameP) {
+				thisOneBecomes = originalType;
+			} else {
+				if (roll < fallStaySameP + fallChangeP) {
+					thisOneBecomes = becomes;
+				}
+			}
+			if (thisOneBecomes != Types.Air) { map.setBlockType((byte) thisOneBecomes, x, fallY, z); }
 			if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
 				map.clearTileEntity(x, y, z);
 			}
@@ -462,6 +479,7 @@ public class Rule {
 			int bestDx = 0;
 			int bestDz = 0;
 			int bestDistance = 0;
+			int originalType = ac.getType(x, y, z, map);
 			for (int dx = -1; dx < 2; dx++) { for (int dz = -1; dz < 2; dz++) {
 				if (dx == 0 && dz == 0) { continue; }
 				if (dx != 0 && dz != 0) { continue; }
@@ -478,7 +496,19 @@ public class Rule {
 			}}
 			//System.out.println(bestDistance + " " + bestDx + " " + bestDz);
 			if (bestDistance > 0) {
-				map.setBlockType((byte) map.getBlockType(x, y, z), x + bestDx, y - bestDistance, z + bestDz);
+				int thisOneBecomes = Types.Air;
+				int becomes = Rules.fallChanges[originalType];
+				double fallStaySameP = Rules.fallStaySameP[originalType];
+				double fallChangeP = Rules.fallChangeP[originalType];
+				double roll = r.nextDouble();
+				if (roll < fallStaySameP) {
+					thisOneBecomes = originalType;
+				} else {
+					if (roll < fallStaySameP + fallChangeP) {
+						thisOneBecomes = becomes;
+					}
+				}
+				map.setBlockType((byte) thisOneBecomes, x + bestDx, y - bestDistance, z + bestDz);
 				if (Rules.checkTileEntity[map.getBlockType(x, y, z) + 1]) {
 					map.clearTileEntity(x, y, z);
 				}
@@ -486,7 +516,7 @@ public class Rule {
 				map.healBlockLight(x, y, z);
 				// Light?
 				if (ac.currentRule.recurseDownwardsOnSuccess) {
-					ac.currentRule.apply(x + bestDx, y - bestDistance, z + bestDz, map, r, ac);
+					//ac.currentRule.apply(x + bestDx, y - bestDistance, z + bestDz, map, r, ac);
 					ac.currentRule.apply(x, y - 1, z, map, r, ac);
 				}
 				return true;
@@ -513,7 +543,13 @@ public class Rule {
 			if (ch == null) { return 0; }
 			ch.prepare();
 			if (Arrays.binarySearch(types, ac.getType(x, y, z, map)) < 0) { return 0; }
-			if (map.getPartOfBlob(x, y, z)) { return 0; } // Already evaluated this blob.
+			try {
+				if (map.getPartOfBlob(x, y, z)) { return 0; } // Already evaluated this blob.
+			} catch (NullPointerException npe) {
+				Chunk.printPOB = true;
+				System.err.println(map.getChunkForBlock(x, z).globalChunkX + "/" + map.getChunkForBlock(x, z).globalChunkZ);
+				map.getPartOfBlob(x, y, z);
+			}
 			/*System.out.println("Blob found.");
 			System.out.println("Blob initial block is " + ac.getType(x, y, z, map));*/
 			IntPt3Stack q = new IntPt3Stack(10);

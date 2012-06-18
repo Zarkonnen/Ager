@@ -26,7 +26,7 @@ public class Ager {
 		Random r = new Random();
 		
 		Blinkenlights bl = null;
-		MCMap m = new MCMap(new File(args[0]), (int) (Math.min(Runtime.getRuntime().maxMemory() / 400000, 100000000)));
+		MCMap m = new MCMap(new File(args[0]), (int) (Math.min(Runtime.getRuntime().maxMemory() / 500000, 100000000)));
 		
 		m.resetLevelData();
 		
@@ -65,6 +65,7 @@ public class Ager {
 		int iters = args.length > 1 ? Integer.parseInt(args[1]) : 1;
 		int loops = iters * 4;
 		for (int lp = 0; lp < loops; lp++) {
+			System.out.println("Free memory: " + Runtime.getRuntime().freeMemory());
 			final int phase = lp % 4;
 			final int iter = lp / 4;
 			System.out.println("Round " + (iter + 1) + ", phase " + (phase + 1));
@@ -80,7 +81,7 @@ public class Ager {
 			}
 			if (phase == FALL && doExtendedPhase) {
 				System.out.println("calcsupport start");
-				m.newCalcSupport();
+				m.newCalcSupport(Math.min(3, iter + 1));
 				System.out.println("calcsupport end");
 			}
 			if (phase == LIGHTING && doExtendedPhase) {
@@ -142,7 +143,7 @@ public class Ager {
 									if (ac.type > Types.Air &&
 										f.chunks[zBlock][xBlock].supported.array[y * 256 + lz * 16 + lx] < Rules.weight[ac.type + 1])
 									{
-										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type]);
+										Rule.fall(x, y, z, m, Rules.fallChanges[ac.type], Rules.fallStaySameP[ac.type], Rules.fallChangeP[ac.type], r);
 									} else {
 										if (Rules.flows[ac.type + 1]) {
 											m.doFlow(x, y, z);

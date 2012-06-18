@@ -66,10 +66,10 @@ public class MCAFile {
 		}}
 	}
 	
-	public boolean newFinishSupport(Blinkenlights bl) {
+	public boolean newFinishSupport(Blinkenlights bl, int dragMultiplier) {
 		for (int z = 0; z < 32; z++) { for (int x = 0; x < 32; x++) {
 			if (chunks[z][x] != null) {
-				chunks[z][x].newFloodFill();
+				chunks[z][x].newFloodFill(dragMultiplier);
 				if (bl != null) { bl.repaint(); }
 			}
 		}}

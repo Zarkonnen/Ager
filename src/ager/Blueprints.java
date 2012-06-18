@@ -4,18 +4,14 @@ import static ager.Types.*;
 public class Blueprints {
 	public static final int[][][] SPAWNER = {
 		{
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Monster_Spawner, Air, Air},
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air}
+			{Air, Air, Air},
+			{Air, Monster_Spawner, Air},
+			{Air, Air, Air},
 		},
 		{
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air},
-			{Air, Air, Air, Air, Air}
+			{Air, Air, Air},
+			{Air, Air, Air},
+			{Air, Air, Air},
 		}
 	};
 

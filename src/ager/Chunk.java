@@ -1,10 +1,10 @@
 package ager;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import net.minecraft.world.level.chunk.storage.RegionFile;
 import unknown.Tag;
 
@@ -40,7 +40,7 @@ public class Chunk {
 	long lastAccess = 0;
 	ArrayList<Chunk> loadedChunks;
 
-	public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, ArrayList<Chunk> loadedChunks, int maxChunksLoaded, PooledPagingByteArray.Pool pool) {
+	public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, ArrayList<Chunk> loadedChunks, int maxChunksLoaded, PooledPagingByteArray.Pool pool) throws IOException {
 		this.rf = rf;
 		this.rfX = rfX;
 		this.rfZ = rfZ;
@@ -166,9 +166,9 @@ public class Chunk {
 	static final int[] DX = { 0,  0,  0, -1,  1, -1, -1, -1,  0,  0,  1,  1,  1,  0,  0,  0, -1,  1};
 	static final int[] DY = {-1, -1, -1, -1, -1,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,  1};
 	static final int[] DZ = { 0, -1,  1,  0,  0, -1,  0,  1, -1,  1, -1,  0,  1,  0, -1,  1,  0,  0};
-	static final int[] SC = { 2,  3,  3,  3,  3,  5,  1,  5,  1,  1,  5,  1,  5,  0,  3,  3,  3,  3};
+	static final int[] SC = { 2,  5,  5,  5,  5,  5,  1,  5,  1,  1,  5,  1,  5,  0,  5,  5,  5,  5};
 	
-	public void newFloodFill() {
+	public void newFloodFill(int dragMultiplier) {
 		//prepare();
 		/*if (2 * 2 == 4) { // qqDPS
 			q.clear();
@@ -220,10 +220,13 @@ public class Chunk {
 				if (Rules.needsSupportFromBelow[targetType + 1] && !(DX[j] == 0 && DY[j] == 1 && DZ[j] == 0)) {
 					continue;
 				}
+				if (Rules.supportFromAboveAndSidesOnly[targetType + 1] && (DY[j] == -1 || (Math.abs(DX[j]) + Math.abs(DZ[j]) > 1) || (DY[j] == 1 && (DX[j] != 0 || DY[j] != 0)))) {
+					continue;
+				}
 				if ((Rules.needsSupportFromFaces[srcType + 1] || Rules.needsSupportFromFaces[targetType + 1]) && (Math.abs(DX[j]) + Math.abs(DY[j]) + Math.abs(DZ[j]) > 1)) {
 					continue;
 				}
-				int newSupport = srcSupport - SC[j] * Rules.support[srcType + 1];
+				int newSupport = srcSupport - SC[j] * Rules.support[srcType + 1] * dragMultiplier * (srcType == targetType ? 1 : 2);
 				if (newSupport > 0 && Rules.weight[targetType + 1] <= newSupport && newSupport > targetChunk.supported.array[ny * 256 + nz * 16 + nx]) {
 					targetChunk.supported.array[ny * 256 + nz * 16 + nx] = (byte) newSupport;
 					if (!Rules.providesSupport[targetType + 1]) { continue; }
@@ -250,15 +253,26 @@ public class Chunk {
 		}
 	}
 	
+	static boolean printPOB;
+	
 	public boolean getPartOfBlob(int x, int y, int z) {
+		if (printPOB) { System.err.println(globalChunkX + "/" + globalChunkZ); }
 		//prepare();
-		return partOfBlob.array[y * 256 + z * 16 + x] > 0;
+		try {
+			return partOfBlob.get()[y * 256 + z * 16 + x] > 0;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 		//return partOfBlob.get(y * 256 + z * 16 + x);
 	}
 	
 	public void setPartOfBlob(int x, int y, int z, boolean value) {
 		//prepare();
-		partOfBlob.array[y * 256 + z * 16 + x] = (byte) (value ? 1 : 0);
+		try {
+			partOfBlob.get()[y * 256 + z * 16 + x] = (byte) (value ? 1 : 0);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
 		//partOfBlob.set(y * 256 + z * 16 + x, value);
 	}
 	

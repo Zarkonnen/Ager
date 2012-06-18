@@ -100,19 +100,21 @@ public class MCMap {
 		if (pl != null) {
 			makePlayerAdventurer(pl, r);
 		}
-		for (File f : new File(worldF, "players").listFiles()) {
-			if (f.getName().endsWith(".dat")) {
-				try {
-					GZIPInputStream gis = new GZIPInputStream(new FileInputStream(f));
-					Tag t = Tag.readFrom(gis);
-					gis.close();
-					makePlayerAdventurer(t, r);
-					GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(f));
-					t.writeTo(gos);
-					gos.flush();
-					gos.close();
-				} catch (Exception e) {
-					e.printStackTrace();
+		if (new File(worldF, "players").exists()) {
+			for (File f : new File(worldF, "players").listFiles()) {
+				if (f.getName().endsWith(".dat")) {
+					try {
+						GZIPInputStream gis = new GZIPInputStream(new FileInputStream(f));
+						Tag t = Tag.readFrom(gis);
+						gis.close();
+						makePlayerAdventurer(t, r);
+						GZIPOutputStream gos = new GZIPOutputStream(new FileOutputStream(f));
+						t.writeTo(gos);
+						gos.flush();
+						gos.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -320,7 +322,7 @@ public class MCMap {
 		setSkyLight((byte) max, x, y, z);
 	}
 	
-	public void newCalcSupport() {
+	public void newCalcSupport(int dragMultiplier) {
 		for (MCAFile f : files) {
 			f.newInitSupport(bl);
 		}
@@ -329,7 +331,7 @@ public class MCMap {
 		lp: while (true) {
 			System.out.println("FinishSupport pass " + pass++);
 			for (MCAFile f : files) {
-				if (!f.newFinishSupport(bl)) {
+				if (!f.newFinishSupport(bl, dragMultiplier)) {
 					continue lp;
 				}
 			}
