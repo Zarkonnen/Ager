@@ -624,6 +624,7 @@ public class Rule {
 	}
 	
 	public static Condition connectedBlobContains(int type) { return new MinimumCondition(new ConnectedBlobTypeCount(type), 1); }
+	public static Condition connectedBlobContainsNoMoreThan(int type, int max) { return new MaximumCondition(new ConnectedBlobTypeCount(type), max); }
 	public static Condition connectedBlobDoesNotContain(int type) { return new MaximumCondition(new ConnectedBlobTypeCount(type), 0); }
 	public static ProbabilityModifier connectedBlobContains(double p, int type) { return new ProbabilityModifier(new ConnectedBlobTypeCount(type), p); }
 	

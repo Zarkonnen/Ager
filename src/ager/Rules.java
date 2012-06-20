@@ -523,7 +523,7 @@ public class Rules {
 		rule().desc("Redstone lamp vanishing.").
 				p(0.1).when(is(Redstone_Lamp_on)).then(become(Air));
 		rule().desc("Glowstone vanishing.").
-				p(0.01).when(is(Glowstone)).moreLikelyWhen(skyExposed(0.05)).then(become(Air));
+				p(0.3).when(is(Glowstone)).then(become(Air));
 		rule().desc("Rail vanishing.").
 				p(0.002).when(is(Rails)).then(become(Air));
 		rule().desc("Powered rail becoming depowered.").
@@ -581,7 +581,7 @@ public class Rules {
 		rule().desc("Wheat vanishing.").
 				p(0.4).when(is(Wheat_Crops)).then(become(Air));
 		rule().desc("Torch vanishing.").
-				p(0.75).when(is(Torch)).then(become(Air));
+				p(1.0).when(is(Torch)).then(become(Air));
 		rule().desc("Bookcases rotting.").
 				p(0.1).when(is(Bookshelf)).moreLikelyWhen(below(0.1, Air)).then(become(Air));
 		
@@ -677,6 +677,19 @@ public class Rules {
 		rule().desc("Beds disappear pretty quickly.").
 				p(0.45).when(isConnectedBlobOf(Bed_Block)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
 		
+		rule().desc("Half-beds always disappear.").
+				p(1.0).when(isConnectedBlobOf(Bed_Block)).when(connectedBlobContainsNoMoreThan(Bed_Block, 1)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		
+		// Pistons
+		rule().desc("Pistons disappear sometimes.").
+				p(0.2).when(isConnectedBlobOf(Piston, Piston_Head)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		rule().desc("Delete orphaned heads.").
+				p(1.0).when(isConnectedBlobOf(Piston, Piston_Head)).when(connectedBlobDoesNotContain(Piston)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		rule().desc("Pistons disappear sometimes.").
+				p(0.2).when(isConnectedBlobOf(Sticky_Piston, Piston_Head)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+		rule().desc("Delete orphaned heads.").
+				p(1.0).when(isConnectedBlobOf(Sticky_Piston, Piston_Head)).when(connectedBlobDoesNotContain(Sticky_Piston)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));
+				
 		// Chests
 		/*rule().desc("Chests disappear very rarely.").
 				p(0.001).when(isConnectedBlobOf(Chest)).then(applyCollectively(new Rule().p(1.0).then(become(Air))));*/
@@ -701,7 +714,8 @@ public class Rules {
 		
 		// Spawning spawners
 		secondRule().desc("Spawning a spawner.").
-				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).then(createStructure("spawner", SPAWNER, null, -1, 1, -1, 0, 0)).
+				p(0.5).when(anyOf(Cobblestone, Wooden_Plank, Nether_Brick, Sandstone, Brick, Stone_Brick, Mossy_Cobblestone, Double_Stone_Slab, Wooden_Double_Slab, Iron_Block, Gold_Block, Diamond_Block)).
+				when(notWithinDistOf(6, Monster_Spawner)).then(createStructure("spawner", SPAWNER, null, -1, 1, -1, 0, 0)).
 				then(new Outcome()
 		{
 			@Override

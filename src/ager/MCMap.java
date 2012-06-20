@@ -481,6 +481,21 @@ public class MCMap {
 			int belowType = getBlockType(flowQ.x, flowQ.y - 1, flowQ.z);
 			boolean hasBottom = belowType != type && belowType != Types.Air;
 			
+			if (hasBottom) {
+				if (type == Types.Water && belowType == Types.Lava) {
+					if (getData(flowQ.x, flowQ.y - 1, flowQ.z) == 0) {
+						setBlockType((byte) Types.Obsidian, flowQ.x, flowQ.y - 1, flowQ.z);
+					} else {
+						setBlockType((byte) Types.Cobblestone, flowQ.x, flowQ.y - 1, flowQ.z);
+					}
+					continue;
+				}
+				if (type == Types.Lava && belowType == Types.Water) {
+					setBlockType((byte) Types.Stone, flowQ.x, flowQ.y - 1, flowQ.z);
+					continue;
+				}
+			}
+			
 			if (hasBottom || isSource) {
 				for (int j = 0; j < 4; j++) {
 					final int newLevel = (level == 8 ? 0 : level) + (type == Types.Water ? 1 : 2);
@@ -489,6 +504,18 @@ public class MCMap {
 					final int ny = flowQ.y;
 					final int nz = flowQ.z + NS_Z[j];
 					int nType = getBlockType(nx, ny, nz);
+					if (type == Types.Water && nType == Types.Lava) {
+						if (getData(nx, ny, nz) == 0) {
+							setBlockType((byte) Types.Obsidian, nx, ny, nz);
+						} else {
+							setBlockType((byte) Types.Cobblestone, nx, ny, nz);
+						}
+						continue;
+					}
+					if (type == Types.Lava && nType == Types.Water) {
+						setBlockType((byte) Types.Cobblestone, nx, ny, nz);
+						continue;
+					}
 					if (nType == type && getData(nx, ny, nz) <= newLevel) {
 						continue;
 					}
