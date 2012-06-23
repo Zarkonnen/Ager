@@ -4,6 +4,10 @@ Use at your own risk!
 Created by David Stark: http://www.zarkonnen.com/
 Source code available at: https://github.com/Zarkonnen/Ager
 
+The Ager is free to use. If you like it, please donate something at http://www.zarkonnen.com/ager/
+
+If you experience any problems, please submit a detailed bug report at https://github.com/Zarkonnen/Ager/issues
+
 Licensing information:
 
 With the exceptions noted below, the code is copyright David Stark and licensed under the Apache 2 licence.
