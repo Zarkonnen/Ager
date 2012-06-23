@@ -5,6 +5,7 @@
 package ager;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Random;
 
 public class Ager {
@@ -12,15 +13,35 @@ public class Ager {
 	public static final int FALL = 1;
 	public static final int LIGHTING = 2;
 	public static final int APPLY_SECONDARY_RULES = 3;
+	public static Loggr log = new Loggr() {
+		@Override
+		public void log(String l) {
+			System.out.println(l);
+		}
+
+		@Override
+		public void error(String l) {
+			System.err.println(l);
+		}
+
+		@Override
+		public void error(Exception e) {
+			e.printStackTrace();
+		}
+	};
 	
 	public static void main(String[] args) throws Exception {
 		if (args.length == 0) {
-			System.out.println("Usage:");
+			System.out.println("Command line usage:");
 			System.out.println("java -Xmx4000m -jar Ager.jar <path to world folder> [number of iterations] [options]");
 			System.out.println("Options are in key=value format. Available options:");
 			System.out.println("gamemode=survival|hardcore|creative");
 			System.out.println("players=keep|reset|explorers");
 			System.out.println("blinkenlights=false|true");
+			GuiWorldSelector gws = new GuiWorldSelector();
+			gws.setVisible(true);
+			gws.setLocationRelativeTo(null);
+			return;
 		}
 		
 		Random r = new Random();
@@ -58,11 +79,14 @@ public class Ager {
 			}
 		}
 		
-		//System.out.println(m.levelDat.findTagByName("Time").getValue());
+		int iters = args.length > 1 ? Integer.parseInt(args[1]) : 1;
 		
+		process(m, r, bl, iters);
+	}
+	
+	public static void process(MCMap m, Random r, Blinkenlights bl, int iters) throws IOException {		
 		IntPt4Stack lightQ = new IntPt4Stack(2048);
 		
-		int iters = args.length > 1 ? Integer.parseInt(args[1]) : 1;
 		int loops = iters * 4;
 		for (int lp = 0; lp < loops; lp++) {
 			System.out.println("Free memory: " + Runtime.getRuntime().freeMemory());
